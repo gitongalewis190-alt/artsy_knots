@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Artsy Knots — Handmade Art by Bernice Wairimu</title>
+<meta name="description" content="Handmade mats, tufted rugs, canvas art and resin pieces by Bernice Wairimu. Custom commissions from Nairobi.">
+<meta name="theme-color" id="themeColor" content="#eafaff">
+<!-- [A-02] PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-density="standard" data-shape="default" data-view="glass" data-theme="light">
+
+<!-- [ANIM-01] Intro animation screen -->
+<div id="introScreen" class="intro-screen" aria-hidden="true">
+  <div class="intro-content">
+    <div class="logo-container">
+      <div class="rotating-logo" id="rotatingLogo">A</div>
+    </div>
+    <div class="intro-text" id="introText"></div>
+  </div>
+</div>
+
+<div id="waterField"></div>
+<canvas id="neuralCanvas"></canvas>
+<div id="caustics"></div>
+<canvas id="rippleCanvas"></canvas>
+
+<header class="topbar" id="topbar">
+  <a href="#top" class="brand">
+    <span class="logo-wrap" id="logoWrap"></span>
+    <span class="brand-name" id="brandName">Artsy Knots<small id="brandTag">handmade studio</small></span>
+  </a>
+  <nav class="nav">
+    <a href="#gallery" class="nav-link">Works</a>
+    <a href="#about" class="nav-link">Bernice</a>
+    <a href="#contact" class="nav-link">Contact</a>
+    <button class="icon-btn owner-key" id="ownerKey" aria-label="Studio owner access" onclick="Console.open()">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 12c2.2 0 4-2 4-4.5S14.2 3 12 3 8 5 8 7.5 9.8 12 12 12z"/>
+        <path d="M5 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/>
+        <path d="M18 3.2l.6 1.3 1.3.6-1.3.6-.6 1.3-.6-1.3L16.1 5.1l1.3-.6z"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="cartBtn" aria-label="Cart" onclick="Cart.open()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="count" id="cartCount" style="display:none">0</span>
+    </button>
+  </nav>
+</header>
+
+<section class="hero" id="top">
+  <span class="eyebrow"><span class="dot"></span><span id="heroEyebrow">Handmade in Nairobi · one of a kind</span></span>
+  <h1 id="heroTitle">Texture you can <em>feel</em>, art you can hold.</h1>
+  <p class="lede" id="heroLede">Hand-knotted mats, tufted rugs, canvas works and resin pieces — each made slowly by Bernice Wairimu.</p>
+  <div class="hero-cta">
+    <a href="#gallery" class="btn btn-primary">Explore the collection <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a href="#about" class="btn btn-glass">Meet Bernice</a>
+  </div>
+  <div class="scroll-hint">scroll <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></div>
+</section>
+
+<section class="section" id="gallery">
+  <div class="section-head reveal">
+    <div class="kicker">The Collection</div>
+    <h2 id="galleryTitle">Pieces looking for a wall</h2>
+    <p id="gallerySub">Search, sort and like what speaks to you. Add it to your bag and we'll finish the conversation directly.</p>
+  </div>
+  <div class="controls reveal">
+    <div class="searchbar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="search" placeholder="Search by name, description, material, dimensions…" oninput="Gallery.apply()" aria-label="Search works">
+      <div class="sort-menu">
+        <button class="sort-btn" onclick="Gallery.toggleSort(event)" aria-haspopup="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          <span id="sortLabel">Newest</span>
+        </button>
+        <div class="sort-pop" id="sortPop" role="listbox"></div>
+      </div>
+    </div>
+  </div>
+  <div class="filters reveal" id="filters"></div>
+  <div class="grid reveal" id="galleryGrid"></div>
+</section>
+
+<section class="section" id="about">
+  <div class="about-grid">
+    <div class="about-portrait reveal" id="aboutPortrait"></div>
+    <div class="about-copy reveal">
+      <div class="kicker">The Maker</div>
+      <h2 id="aboutHeading">Made by hand, on purpose.</h2>
+      <div class="by-line" id="aboutBy">Bernice Wairimu · Founder, Artsy Knots</div>
+      <div id="aboutBody"></div>
+      <div class="quote" id="aboutQuote"></div>
+      <div class="beliefs" id="beliefs"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contact">
+  <div class="glass contact-card reveal">
+    <h2 id="contactHeading">Let's make something</h2>
+    <p id="contactBody">Commissions are open. Tell me the room, the colours, the feeling — and I'll bring it into the world.</p>
+    <div class="contact-rows" id="contactRows"></div>
+    <div class="socials" id="socials"></div>
+  </div>
+</section>
+
+<footer><div class="fmark" id="footMark">Artsy Knots</div><p id="footLine">Handmade with intention in Nairobi · © <span id="year"></span> Bernice Wairimu</p></footer>
+
+<!-- VIEW SWITCHER (public) -->
+<div class="view-fab" id="viewFab">
+  <button data-view="glass" title="Studio glass" onclick="Views.set('glass')">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v6c0 4.5-3.4 7-8 8-4.6-1-8-3.5-8-8V7z"/></svg>
+  </button>
+  <button data-view="spatial" title="Spatial float" onclick="Views.set('spatial')">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+  </button>
+  <button data-view="neural" title="Neural space" onclick="Views.set('neural')">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="1.5"/><circle cx="18" cy="5" r="1.5"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="1.5"/><circle cx="19" cy="17" r="1.5"/><path d="M6.4 7 10.3 11M16.6 6 13.6 11M7 16.7l3.7-3M17.5 15.8 14 13"/></svg>
+  </button>
+</div>
+
+<div class="scrim" id="scrim" onclick="UI.closeAll()"></div>
+
+<!-- CONSOLE [A-01] -->
+<aside class="console" id="console" role="dialog" aria-modal="true" aria-label="Studio Console">
+  <div class="console-head">
+    <div class="con-ttl">
+      <span class="con-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 12c2.2 0 4-2 4-4.5S14.2 3 12 3 8 5 8 7.5 9.8 12 12 12z"/><path d="M5 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg></span>
+      <div id="consoleAvatar" style="width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--glass-stroke);background:var(--accent);display:grid;place-items:center;font-size:.9rem"></div>
+      <div><h3>Studio Console</h3><div class="con-sub" id="consoleSub">Studio mode · changes save instantly</div></div>
+    </div>
+    <button class="x-btn" onclick="Console.close()" aria-label="Close console">&times;</button>
+  </div>
+  <div class="console-tabs" id="consoleTabs">
+    <button class="ctab active" data-tab="overview">Overview</button>
+    <button class="ctab" data-tab="works">Works</button>
+    <button class="ctab" data-tab="orders">Orders</button>
+    <button class="ctab" data-tab="theme">Theme</button>
+    <button class="ctab" data-tab="layout">Layout</button>
+    <button class="ctab" data-tab="branding">Branding</button>
+    <button class="ctab" data-tab="story">Bernice</button>
+    <button class="ctab" data-tab="social">Socials</button>
+    <button class="ctab" data-tab="payments">Payments</button>
+    <button class="ctab" data-tab="integrations">Integrations</button>
+    <button class="ctab" data-tab="access">Access</button>
+  </div>
+  <div class="console-body">
+    <!-- OVERVIEW -->
+    <div class="cpanel active" data-panel="overview">
+      <div class="status-banner s-dev" id="statusBanner"></div>
+      <div class="stat-row"><div class="stat"><div class="num" id="stWorks">0</div><div class="lbl">Works</div></div><div class="stat"><div class="num" id="stLikes">0</div><div class="lbl">Likes</div></div><div class="stat"><div class="num" id="stOrders">0</div><div class="lbl">Orders</div></div></div>
+      <div class="stat-row"><div class="stat"><div class="num" id="stPending">0</div><div class="lbl">Pending</div></div><div class="stat"><div class="num" id="stViews">0</div><div class="lbl">Views</div></div><div class="stat"><div class="num" id="stValue">0</div><div class="lbl">Catalogue (K)</div></div></div>
+      <p style="font-size:.9rem;color:var(--ink-soft);margin-bottom:16px;line-height:1.6">Everything saves instantly to this device. Add your Firebase keys in <b>Access</b> to go live and lock the studio key.</p>
+      <button class="cbtn cbtn-ghost" onclick="Console.go('works')">Manage works &amp; videos</button>
+      <button class="cbtn cbtn-ghost" onclick="Console.go('orders')">View orders</button>
+      <button class="cbtn cbtn-ghost" onclick="Store.exportData()">Download backup</button>
+      <label class="cbtn cbtn-ghost" style="display:block;text-align:center;cursor:pointer;margin-top:6px">Restore from backup<input type="file" accept="application/json" style="display:none" onchange="Store.importData(event)"></label>
+    </div>
+    <!-- WORKS -->
+    <div class="cpanel" data-panel="works">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="cbtn cbtn-primary" style="margin:0" onclick="Editor.openNew('artwork')">+ Add artwork</button>
+        <button class="cbtn cbtn-ghost" style="margin:0" onclick="Editor.openNew('video')">+ Add video</button>
+      </div>
+      <div id="adminProducts"></div>
+    </div>
+    <!-- ORDERS -->
+    <div class="cpanel" data-panel="orders">
+      <div class="seg" id="orderSeg">
+        <button class="sel" data-f="all" onclick="Orders.filter('all',this)">All</button>
+        <button data-f="pending" onclick="Orders.filter('pending',this)">Pending</button>
+        <button data-f="completed" onclick="Orders.filter('completed',this)">Completed</button>
+      </div>
+      <button class="cbtn cbtn-ghost" onclick="Orders.exportCSV()">Export orders CSV</button>
+      <div id="orderList" style="margin-top:14px"></div>
+    </div>
+    <!-- THEME -->
+    <div class="cpanel" data-panel="theme">
+      <div class="toggle-row"><div class="tlabel">Dark / space surface<small>Black canvas for neural &amp; spatial worlds</small></div><div class="switch" id="sw_dark" onclick="Edit.toggleDark()"></div></div>
+      <div class="field"><label>Palette</label><div class="swatches" id="paletteSwatches"></div><div class="hint">Black/purple, black/blue, black/green, aurora and more — picks accent, gradient and glow all at once.</div></div>
+      <div class="field"><label>Custom accent colour</label><input type="color" class="input" id="f_accent" style="height:48px;padding:5px" oninput="Edit.customAccent(this.value)"></div>
+    </div>
+    <!-- LAYOUT -->
+    <div class="cpanel" data-panel="layout">
+      <div class="field"><label>World &amp; view <span class="hint">Changes are live as you tap — watch the page behind.</span></label><div class="opt-grid" id="viewOpts"></div></div>
+      <div class="field"><label>Gallery density</label><div class="opt-grid" id="densityOpts"></div></div>
+      <div class="field"><label>Corner style</label><div class="opt-grid" id="shapeOpts"></div></div>
+      <div class="field"><label>Background style</label><div class="opt-grid" id="bgOpts"></div></div>
+      <div class="field"><label>Intro transition style</label><div class="opt-grid" id="transitionOpts"></div></div>
+    </div>
+    <!-- BRANDING -->
+    <div class="cpanel" data-panel="branding">
+      <div class="field"><label>Studio name</label><input class="input" id="f_brandName" oninput="Edit.brand()"></div>
+      <div class="field"><label>Tagline</label><input class="input" id="f_brandTag" oninput="Edit.brand()"></div>
+      <div class="field"><label>Logo image<span class="hint"> Upload or paste a link. Leave blank for lettermark.</span></label>
+        <div class="seg-mini"><button id="logo_up" class="sel" onclick="Edit.logoMode('upload')">Upload</button><button id="logo_url" onclick="Edit.logoMode('url')">Link</button></div>
+        <div id="logoUpWrap"><label class="drop-zone">Tap to upload logo<input type="file" accept="image/*" style="display:none" onchange="Edit.logoFile(event)"></label></div>
+        <input class="input" id="f_logoUrl" oninput="Edit.brand()" placeholder="https://…/logo.png" style="display:none;margin-top:8px">
+      </div>
+      <div class="field"><label>Lettermark</label><input class="input" id="f_logoLetter" maxlength="2" oninput="Edit.brand()" placeholder="A"></div>
+      <div class="field"><label>Footer signature</label><input class="input" id="f_footMark" oninput="Edit.brand()"></div>
+    </div>
+    <!-- STORY -->
+    <div class="cpanel" data-panel="story">
+      <div class="field"><label>Hero eyebrow</label><input class="input" id="f_heroEyebrow" oninput="Edit.copy()"></div>
+      <div class="field"><label>Hero headline <span class="hint">*stars* = italic.</span></label><input class="input" id="f_heroTitle" oninput="Edit.copy()"></div>
+      <div class="field"><label>Hero subtitle</label><textarea class="textarea" id="f_heroLede" oninput="Edit.copy()"></textarea></div>
+      <div class="field"><label>About heading</label><input class="input" id="f_aboutHeading" oninput="Edit.copy()"></div>
+      <div class="field"><label>Your byline</label><input class="input" id="f_aboutBy" oninput="Edit.copy()"></div>
+      <div class="field"><label>What art is to you <span class="hint">Your story. One paragraph per line.</span></label><textarea class="textarea" id="f_aboutBody" style="min-height:130px" oninput="Edit.copy()"></textarea></div>
+      <div class="field"><label>A line you live by</label><textarea class="textarea" id="f_aboutQuote" oninput="Edit.copy()"></textarea></div>
+      <div class="field"><label>Your portrait</label>
+        <label class="drop-zone">Tap to upload portrait<input type="file" accept="image/*" style="display:none" onchange="Edit.portraitFile(event)"></label>
+        <input class="input" id="f_aboutPortrait" oninput="Edit.copy()" placeholder="…or paste an image link" style="margin-top:8px">
+      </div>
+      <div class="field"><label>Beliefs <span class="hint">Comma-separated.</span></label><input class="input" id="f_beliefs" oninput="Edit.copy()"></div>
+      <div class="field"><label>Contact heading</label><input class="input" id="f_contactHeading" oninput="Edit.copy()"></div>
+      <div class="field"><label>Contact blurb</label><textarea class="textarea" id="f_contactBody" oninput="Edit.copy()"></textarea></div>
+    </div>
+    <!-- SOCIALS -->
+    <div class="cpanel" data-panel="social">
+      <div class="field"><label>WhatsApp <span class="hint">Country code + number. e.g. 254706189808</span></label><input class="input" id="f_whatsapp" oninput="Edit.contact()"></div>
+      <div class="field"><label>Phone</label><input class="input" id="f_phone" oninput="Edit.contact()"></div>
+      <div class="field"><label>SMS number <span class="hint">For SMS order confirmation. Can be same as phone.</span></label><input class="input" id="f_sms" oninput="Edit.contact()"></div>
+      <div class="field"><label>Email</label><input class="input" id="f_email" oninput="Edit.contact()"></div>
+      <div class="field"><label>Instagram</label><input class="input" id="f_instagram" oninput="Edit.contact()"></div>
+      <div class="field"><label>TikTok</label><input class="input" id="f_tiktok" oninput="Edit.contact()"></div>
+      <div class="field"><label>Facebook</label><input class="input" id="f_facebook" oninput="Edit.contact()"></div>
+      <div class="field"><label>X (Twitter)</label><input class="input" id="f_twitter" oninput="Edit.contact()"></div>
+      <div class="field"><label>Pinterest</label><input class="input" id="f_pinterest" oninput="Edit.contact()"></div>
+      <div class="field"><label>YouTube</label><input class="input" id="f_youtube" oninput="Edit.contact()"></div>
+      <div class="field"><label>Blog / website <span class="hint">Shown as "Read the blog".</span></label><input class="input" id="f_blog" oninput="Edit.contact()"></div>
+      <div class="field"><label>LinkedIn</label><input class="input" id="f_linkedin" oninput="Edit.contact()"></div>
+      <div class="field"><label>Currency code</label><input class="input" id="f_currency" oninput="Edit.contact()" placeholder="KES"></div>
+    </div>
+    <!-- PAYMENTS [S-01] Secrets removed from client -->
+    <div class="cpanel" data-panel="payments">
+      <div class="toggle-row"><div class="tlabel">M-Pesa (Daraja) checkout<small>Let buyers pay by STK push from the cart</small></div><div class="switch" id="sw_mpesa" onclick="Settings.toggleMpesa()"></div></div>
+      <div class="status-banner s-dev" style="margin-bottom:14px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Sensitive keys (Consumer Key, Secret, Passkey) must be stored in Cloud Function environment variables — never paste them here.
+      </div>
+      <div class="field"><label>Till / Paybill shortcode</label><input class="input" id="f_mp_shortcode" oninput="Edit.payments()" placeholder="174379"></div>
+      <div class="field"><label>STK endpoint <span class="hint">Your Cloud Function that talks to Daraja.</span></label><input class="input mono" id="f_mp_endpoint" oninput="Edit.payments()" placeholder="https://…/mpesaStk"></div>
+      <div class="field"><label>Account reference</label><input class="input" id="f_mp_account" oninput="Edit.payments()" placeholder="ArtsyKnots"></div>
+      <div class="field"><label>Callback URL</label><input class="input mono" id="f_mp_callback" oninput="Edit.payments()" placeholder="https://…/mpesaCallback"></div>
+    </div>
+    <!-- INTEGRATIONS -->
+    <div class="cpanel" data-panel="integrations">
+      <div class="field"><label>Google Analytics 4 ID <span class="hint">e.g. G-XXXXXXXXXX — loads when site is published.</span></label><input class="input mono" id="f_gaId" oninput="Edit.analytics()" placeholder="G-XXXXXXXXXX"></div>
+      <p style="font-size:.83rem;color:var(--ink-soft);line-height:1.6;margin-bottom:14px">Page views, likes, add-to-cart and checkouts are tracked as GA4 events automatically once you publish with an ID.</p>
+      <div class="toggle-row"><div class="tlabel">Haptics<small>Vibration feedback on button taps (supported phones)</small></div><div class="switch on" id="sw_haptics" onclick="Edit.toggleHaptics()"></div></div>
+    </div>
+    <!-- ACCESS [S-06] Firestore rules template -->
+    <div class="cpanel" data-panel="access">
+      <div class="status-banner s-dev" id="settingsStatus"></div>
+      <p style="font-size:.88rem;color:var(--ink-soft);margin-bottom:18px;line-height:1.6">Right now the console is <b>open</b> — first tap walks straight in. Add your details and publish to lock it. After that the studio key asks for email + password before letting anyone in.</p>
+      <div class="field"><label>Admin email</label><input class="input" id="f_adminEmail" placeholder="bernice@email.com" type="email"></div>
+      <div class="field"><label>Firebase config <span class="hint">Paste the whole firebaseConfig object.</span></label><textarea class="textarea mono" id="f_firebase" style="min-height:150px" placeholder='{"apiKey":"…","authDomain":"…","projectId":"…","storageBucket":"…","messagingSenderId":"…","appId":"…"}'></textarea></div>
+      <div class="toggle-row"><div class="tlabel">Sync to the cloud<small>Store works &amp; orders in Firestore, not just this device</small></div><div class="switch" id="sw_cloud" onclick="Settings.toggleCloud()"></div></div>
+      <button class="cbtn cbtn-primary" id="publishBtn" onclick="Settings.publish()">Publish &amp; lock the studio key</button>
+      <button class="cbtn cbtn-danger" id="unpublishBtn" onclick="Settings.unpublish()" style="display:none">Unpublish (back to open mode)</button>
+      <p class="hint" style="margin-top:12px">No Firebase yet? The whole site works on this device. Publishing adds cloud sync + login lock.</p>
+      <!-- [S-06] Firestore Security Rules Template -->
+      <div class="field" style="margin-top:24px">
+        <label>Firestore Security Rules <span class="hint">Copy and paste into Firebase Console → Firestore → Rules</span></label>
+        <textarea class="textarea mono" readonly style="min-height:200px;font-size:.74rem;opacity:.8">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Studio data: public read, admin write only
+    match /sites/{siteId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Products: public read, admin write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Orders: admin only
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</textarea>
+      </div>
+    </div>
+  </div>
+  <!-- [S-04] Session timeout indicator -->
+  <div class="console-timer" id="consoleTimer"></div>
+</aside>
+
+<!-- CART -->
+<aside class="cart" id="cart" role="dialog" aria-modal="true" aria-label="Shopping bag">
+  <div class="cart-head"><h3>Your Cart</h3><button class="x-btn" onclick="Cart.close()" aria-label="Close cart">&times;</button></div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="cart-total"><span>Total</span><strong id="cartTotal">—</strong></div>
+    <div class="pay-opts" id="payOpts">
+      <button class="pay-opt sel" data-pay="whatsapp" onclick="Cart.setPay('whatsapp',this)">WhatsApp</button>
+      <button class="pay-opt" data-pay="mpesa" id="payMpesa" onclick="Cart.setPay('mpesa',this)" style="display:none">M-Pesa</button>
+    </div>
+    <button class="cbtn cbtn-primary" id="checkoutBtn" onclick="Cart.checkout()">Checkout on WhatsApp</button>
+    <p class="hint" style="text-align:center;margin-top:10px">You'll confirm details &amp; payment directly with the studio.</p>
+  </div>
+</aside>
+
+<!-- LOGIN MODAL [A-01] -->
+<div class="overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <div class="modal sm">
+    <h3 id="loginTitle">Studio access</h3><p class="msub">This console is locked. Sign in to manage Artsy Knots.</p>
+    <div class="modal-err" id="loginErr" role="alert"></div>
+    <div class="field"><label>Email</label><input class="input" id="loginEmail" type="email" autocomplete="email"></div>
+    <div class="field"><label>Password</label><div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" id="loginPassEye" class="pw-eye" onclick="var p=document.getElementById('loginPass');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
+    <button class="cbtn cbtn-ghost" onclick="Auth.clearFields();UI.closeAll()">Cancel</button>
+  </div>
+</div>
+
+<!-- SET PASSWORD MODAL -->
+<div class="overlay" id="setPassOverlay" role="dialog" aria-modal="true">
+  <div class="modal sm">
+    <h3>Set your studio password</h3><p class="msub">You'll need your email + this password to access the console.</p>
+    <div class="modal-err" id="setPassErr" role="alert"></div>
+    <div class="field"><label>Password</label><div class="pw-wrap"><input class="input" id="setPass1" type="password" placeholder="Choose a strong password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="var p=document.getElementById('setPass1');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="field"><label>Confirm password</label><div class="pw-wrap"><input class="input" id="setPass2" type="password" placeholder="Type it again" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="var p=document.getElementById('setPass2');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <button class="cbtn cbtn-primary" onclick="Settings._confirmPass()">Set password &amp; publish</button>
+    <button class="cbtn cbtn-ghost" onclick="Settings._cancelPass()">Cancel</button>
+  </div>
+</div>
+
+<!-- EDITOR MODAL [A-01] -->
+<div class="overlay" id="editorOverlay" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+  <div class="modal">
+    <h3 id="editorTitle">Add a work</h3><p class="msub" id="editorSub">Photos sell the piece.</p>
+    <div class="modal-err" id="editorErr" role="alert"></div>
+    <div class="field"><label>Title</label><input class="input" id="e_title" placeholder="e.g. Tidal Bloom"></div>
+    <div class="field"><label>Description</label><textarea class="textarea" id="e_desc" placeholder="Materials, size, feeling…"></textarea></div>
+    <div class="row2">
+      <div class="field"><label>Price</label><input class="input" id="e_price" type="number" min="0" placeholder="3000"></div>
+      <div class="field"><label>Category</label><select class="select" id="e_cat"><option value="matwork">Mats / Tufted</option><option value="canvas">Paintings / Canvas</option><option value="resin">Resin</option><option value="commission">Commission</option></select></div>
+    </div>
+    <div class="field" id="e_dimsWrap"><label>Dimensions <span class="hint">e.g. 120 × 80 cm</span></label><input class="input" id="e_dims" placeholder="120 × 80 cm"></div>
+    <div id="e_imgBlock">
+      <div class="field"><label>Images</label>
+        <div class="seg-mini"><button id="img_up" class="sel" onclick="Editor.imgMode('upload')">Upload</button><button id="img_url" onclick="Editor.imgMode('url')">Link</button></div>
+        <div id="imgUpWrap"><label class="drop-zone">Tap to upload (one or several)<input type="file" accept="image/*" multiple style="display:none" onchange="Editor.imgFiles(event)"></label></div>
+        <input class="input" id="e_image" placeholder="https://…/piece.jpg" style="display:none;margin-top:8px" oninput="Editor.imgFromUrl()">
+        <div class="prev-strip" id="imgPreview"></div>
+      </div>
+    </div>
+    <div id="e_vidBlock" style="display:none">
+      <div class="field"><label>Video link <span class="hint">YouTube, Vimeo, or direct .mp4</span></label><input class="input" id="e_video" placeholder="https://youtu.be/…" oninput="Editor.videoMeta()"></div>
+      <div class="row2">
+        <div class="field"><label>Duration <span class="hint">mm:ss</span></label><input class="input" id="e_duration" placeholder="2:30"></div>
+        <div class="field"><label>Date filmed</label><input class="input" id="e_vdate" type="date"></div>
+      </div>
+      <div class="field"><label>Thumbnail <span class="hint">Auto-detected for YouTube.</span></label><input class="input" id="e_vthumb" placeholder="https://…/thumb.jpg"></div>
+    </div>
+    <button class="cbtn cbtn-primary" onclick="Editor.save()">Save work</button>
+    <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Cancel</button>
+  </div>
+</div>
+
+<!-- DETAIL / COMMENTS MODAL [A-01] -->
+<div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-label="Artwork detail">
+  <div class="modal">
+    <div class="d-media" id="dMedia"></div>
+    <h3 id="dTitle"></h3>
+    <div class="d-meta" id="dMeta"></div>
+    <p id="dDesc" style="color:var(--ink-soft);font-size:.95rem;margin-bottom:10px"></p>
+    <div style="display:flex;gap:8px;margin:14px 0">
+      <button class="act act-like" id="dLike" onclick="Detail.like()"></button>
+      <button class="act act-cart" id="dCart" onclick="Detail.addCart()" style="flex:1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Add to Cart
+      </button>
+    </div>
+    <h4 style="font-family:var(--serif);font-size:1.08rem;color:var(--ink);margin:18px 0 4px">Comments</h4>
+    <div class="cmt-list" id="cmtList"></div>
+    <div class="field" style="margin-top:10px"><input class="input" id="cmtName" placeholder="Your name" autocomplete="name"></div>
+    <div class="field"><textarea class="textarea" id="cmtText" placeholder="Leave a thought…" style="min-height:68px"></textarea></div>
+    <button class="cbtn cbtn-primary" onclick="Detail.comment()">Post comment</button>
+    <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Close</button>
+  </div>
+</div>
+
+<!-- [A-01] aria-live for toast announcements -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
+
+<!-- [P-06] Firebase SDKs deferred -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>
