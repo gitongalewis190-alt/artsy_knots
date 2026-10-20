@@ -6,23 +6,19 @@
 <title>Artsy Knots — Handmade Art by Bernice Wairimu</title>
 <meta name="description" content="Handmade mats, tufted rugs, canvas art and resin pieces by Bernice Wairimu. Custom commissions from Nairobi.">
 <meta name="theme-color" id="themeColor" content="#eafaff">
-<!-- [A-02] PWA Manifest -->
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/gitongalewis190-alt/artsy_knots@main/css/styles.css">
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-density="standard" data-shape="default" data-view="glass" data-theme="light">
 
-<!-- [ANIM-01] Intro animation screen -->
 <div id="introScreen" class="intro-screen" aria-hidden="true">
   <div class="intro-content">
-    <div class="logo-container">
-      <div class="rotating-logo" id="rotatingLogo">A</div>
-    </div>
+    <div class="logo-container"><div class="rotating-logo" id="rotatingLogo">A</div></div>
     <div class="intro-text" id="introText"></div>
   </div>
 </div>
@@ -114,28 +110,21 @@
 
 <footer><div class="fmark" id="footMark">Artsy Knots</div><p id="footLine">Handmade with intention in Nairobi · © <span id="year"></span> Bernice Wairimu</p></footer>
 
-<!-- VIEW SWITCHER (public) -->
 <div class="view-fab" id="viewFab">
-  <button data-view="glass" title="Studio glass" onclick="Views.set('glass')">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v6c0 4.5-3.4 7-8 8-4.6-1-8-3.5-8-8V7z"/></svg>
-  </button>
-  <button data-view="spatial" title="Spatial float" onclick="Views.set('spatial')">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-  </button>
-  <button data-view="neural" title="Neural space" onclick="Views.set('neural')">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="1.5"/><circle cx="18" cy="5" r="1.5"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="1.5"/><circle cx="19" cy="17" r="1.5"/><path d="M6.4 7 10.3 11M16.6 6 13.6 11M7 16.7l3.7-3M17.5 15.8 14 13"/></svg>
-  </button>
+  <button data-view="glass" title="Studio glass" onclick="Views.set('glass')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v6c0 4.5-3.4 7-8 8-4.6-1-8-3.5-8-8V7z"/></svg></button>
+  <button data-view="spatial" title="Spatial float" onclick="Views.set('spatial')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+  <button data-view="neural" title="Neural space" onclick="Views.set('neural')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="1.5"/><circle cx="18" cy="5" r="1.5"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="1.5"/><circle cx="19" cy="17" r="1.5"/><path d="M6.4 7 10.3 11M16.6 6 13.6 11M7 16.7l3.7-3M17.5 15.8 14 13"/></svg></button>
 </div>
 
 <div class="scrim" id="scrim" onclick="UI.closeAll()"></div>
 
-<!-- CONSOLE [A-01] -->
+<!-- STUDIO CONSOLE -->
 <aside class="console" id="console" role="dialog" aria-modal="true" aria-label="Studio Console">
   <div class="console-head">
     <div class="con-ttl">
       <span class="con-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 12c2.2 0 4-2 4-4.5S14.2 3 12 3 8 5 8 7.5 9.8 12 12 12z"/><path d="M5 21c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg></span>
       <div id="consoleAvatar" style="width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--glass-stroke);background:var(--accent);display:grid;place-items:center;font-size:.9rem"></div>
-      <div><h3>Studio Console</h3><div class="con-sub" id="consoleSub">Studio mode · changes save instantly</div></div>
+      <div><h3>Studio Console</h3><div class="con-sub" id="consoleSub">Live studio · changes publish instantly</div></div>
     </div>
     <button class="x-btn" onclick="Console.close()" aria-label="Close console">&times;</button>
   </div>
@@ -150,21 +139,20 @@
     <button class="ctab" data-tab="social">Socials</button>
     <button class="ctab" data-tab="payments">Payments</button>
     <button class="ctab" data-tab="integrations">Integrations</button>
-    <button class="ctab" data-tab="access">Access</button>
+    <button class="ctab" data-tab="access">Account</button>
   </div>
   <div class="console-body">
-    <!-- OVERVIEW -->
+
     <div class="cpanel active" data-panel="overview">
-      <div class="status-banner s-dev" id="statusBanner"></div>
+      <div class="status-banner s-live" id="statusBanner">🟢 Signed in as studio owner.</div>
       <div class="stat-row"><div class="stat"><div class="num" id="stWorks">0</div><div class="lbl">Works</div></div><div class="stat"><div class="num" id="stLikes">0</div><div class="lbl">Likes</div></div><div class="stat"><div class="num" id="stOrders">0</div><div class="lbl">Orders</div></div></div>
       <div class="stat-row"><div class="stat"><div class="num" id="stPending">0</div><div class="lbl">Pending</div></div><div class="stat"><div class="num" id="stViews">0</div><div class="lbl">Views</div></div><div class="stat"><div class="num" id="stValue">0</div><div class="lbl">Catalogue (K)</div></div></div>
-      <p style="font-size:.9rem;color:var(--ink-soft);margin-bottom:16px;line-height:1.6">Everything saves instantly to this device. Add your Firebase keys in <b>Access</b> to go live and lock the studio key.</p>
+      <p style="font-size:.9rem;color:var(--ink-soft);margin-bottom:16px;line-height:1.6">Everything you change here is saved to your studio database and shows on every device.</p>
       <button class="cbtn cbtn-ghost" onclick="Console.go('works')">Manage works &amp; videos</button>
       <button class="cbtn cbtn-ghost" onclick="Console.go('orders')">View orders</button>
       <button class="cbtn cbtn-ghost" onclick="Store.exportData()">Download backup</button>
-      <label class="cbtn cbtn-ghost" style="display:block;text-align:center;cursor:pointer;margin-top:6px">Restore from backup<input type="file" accept="application/json" style="display:none" onchange="Store.importData(event)"></label>
     </div>
-    <!-- WORKS -->
+
     <div class="cpanel" data-panel="works">
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <button class="cbtn cbtn-primary" style="margin:0" onclick="Editor.openNew('artwork')">+ Add artwork</button>
@@ -172,7 +160,7 @@
       </div>
       <div id="adminProducts"></div>
     </div>
-    <!-- ORDERS -->
+
     <div class="cpanel" data-panel="orders">
       <div class="seg" id="orderSeg">
         <button class="sel" data-f="all" onclick="Orders.filter('all',this)">All</button>
@@ -182,21 +170,22 @@
       <button class="cbtn cbtn-ghost" onclick="Orders.exportCSV()">Export orders CSV</button>
       <div id="orderList" style="margin-top:14px"></div>
     </div>
-    <!-- THEME -->
+
     <div class="cpanel" data-panel="theme">
       <div class="toggle-row"><div class="tlabel">Dark / space surface<small>Black canvas for neural &amp; spatial worlds</small></div><div class="switch" id="sw_dark" onclick="Edit.toggleDark()"></div></div>
       <div class="field"><label>Palette</label><div class="swatches" id="paletteSwatches"></div><div class="hint">Black/purple, black/blue, black/green, aurora and more — picks accent, gradient and glow all at once.</div></div>
       <div class="field"><label>Custom accent colour</label><input type="color" class="input" id="f_accent" style="height:48px;padding:5px" oninput="Edit.customAccent(this.value)"></div>
     </div>
-    <!-- LAYOUT -->
+
     <div class="cpanel" data-panel="layout">
       <div class="field"><label>World &amp; view <span class="hint">Changes are live as you tap — watch the page behind.</span></label><div class="opt-grid" id="viewOpts"></div></div>
       <div class="field"><label>Gallery density</label><div class="opt-grid" id="densityOpts"></div></div>
       <div class="field"><label>Corner style</label><div class="opt-grid" id="shapeOpts"></div></div>
       <div class="field"><label>Background style</label><div class="opt-grid" id="bgOpts"></div></div>
       <div class="field"><label>Intro transition style</label><div class="opt-grid" id="transitionOpts"></div></div>
+      <div class="toggle-row"><div class="tlabel">Haptics<small>Vibration feedback on button taps (supported phones)</small></div><div class="switch on" id="sw_haptics" onclick="Edit.toggleHaptics()"></div></div>
     </div>
-    <!-- BRANDING -->
+
     <div class="cpanel" data-panel="branding">
       <div class="field"><label>Studio name</label><input class="input" id="f_brandName" oninput="Edit.brand()"></div>
       <div class="field"><label>Tagline</label><input class="input" id="f_brandTag" oninput="Edit.brand()"></div>
@@ -208,7 +197,7 @@
       <div class="field"><label>Lettermark</label><input class="input" id="f_logoLetter" maxlength="2" oninput="Edit.brand()" placeholder="A"></div>
       <div class="field"><label>Footer signature</label><input class="input" id="f_footMark" oninput="Edit.brand()"></div>
     </div>
-    <!-- STORY -->
+
     <div class="cpanel" data-panel="story">
       <div class="field"><label>Hero eyebrow</label><input class="input" id="f_heroEyebrow" oninput="Edit.copy()"></div>
       <div class="field"><label>Hero headline <span class="hint">*stars* = italic.</span></label><input class="input" id="f_heroTitle" oninput="Edit.copy()"></div>
@@ -225,7 +214,7 @@
       <div class="field"><label>Contact heading</label><input class="input" id="f_contactHeading" oninput="Edit.copy()"></div>
       <div class="field"><label>Contact blurb</label><textarea class="textarea" id="f_contactBody" oninput="Edit.copy()"></textarea></div>
     </div>
-    <!-- SOCIALS -->
+
     <div class="cpanel" data-panel="social">
       <div class="field"><label>WhatsApp <span class="hint">Country code + number. e.g. 254706189808</span></label><input class="input" id="f_whatsapp" oninput="Edit.contact()"></div>
       <div class="field"><label>Phone</label><input class="input" id="f_phone" oninput="Edit.contact()"></div>
@@ -241,60 +230,35 @@
       <div class="field"><label>LinkedIn</label><input class="input" id="f_linkedin" oninput="Edit.contact()"></div>
       <div class="field"><label>Currency code</label><input class="input" id="f_currency" oninput="Edit.contact()" placeholder="KES"></div>
     </div>
-    <!-- PAYMENTS [S-01] Secrets removed from client -->
+
     <div class="cpanel" data-panel="payments">
       <div class="toggle-row"><div class="tlabel">M-Pesa (Daraja) checkout<small>Let buyers pay by STK push from the cart</small></div><div class="switch" id="sw_mpesa" onclick="Settings.toggleMpesa()"></div></div>
-      <div class="status-banner s-dev" style="margin-bottom:14px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Sensitive keys (Consumer Key, Secret, Passkey) must be stored in Cloud Function environment variables — never paste them here.
-      </div>
+      <div class="status-banner s-dev" style="margin-bottom:14px">Daraja secret keys never go in this panel. They belong in server environment variables only.</div>
       <div class="field"><label>Till / Paybill shortcode</label><input class="input" id="f_mp_shortcode" oninput="Edit.payments()" placeholder="174379"></div>
-      <div class="field"><label>STK endpoint <span class="hint">Your Cloud Function that talks to Daraja.</span></label><input class="input mono" id="f_mp_endpoint" oninput="Edit.payments()" placeholder="https://…/mpesaStk"></div>
+      <div class="field"><label>STK endpoint <span class="hint">Your server function that talks to Daraja.</span></label><input class="input mono" id="f_mp_endpoint" oninput="Edit.payments()" placeholder="https://…"></div>
       <div class="field"><label>Account reference</label><input class="input" id="f_mp_account" oninput="Edit.payments()" placeholder="ArtsyKnots"></div>
-      <div class="field"><label>Callback URL</label><input class="input mono" id="f_mp_callback" oninput="Edit.payments()" placeholder="https://…/mpesaCallback"></div>
+      <div class="field"><label>Callback URL</label><input class="input mono" id="f_mp_callback" oninput="Edit.payments()" placeholder="https://…"></div>
     </div>
-    <!-- INTEGRATIONS -->
+
     <div class="cpanel" data-panel="integrations">
-      <div class="field"><label>Google Analytics 4 ID <span class="hint">e.g. G-XXXXXXXXXX — loads when site is published.</span></label><input class="input mono" id="f_gaId" oninput="Edit.analytics()" placeholder="G-XXXXXXXXXX"></div>
-      <p style="font-size:.83rem;color:var(--ink-soft);line-height:1.6;margin-bottom:14px">Page views, likes, add-to-cart and checkouts are tracked as GA4 events automatically once you publish with an ID.</p>
-      <div class="toggle-row"><div class="tlabel">Haptics<small>Vibration feedback on button taps (supported phones)</small></div><div class="switch on" id="sw_haptics" onclick="Edit.toggleHaptics()"></div></div>
+      <div class="field"><label>Google Analytics 4 ID <span class="hint">e.g. G-XXXXXXXXXX — loads on the public site.</span></label><input class="input mono" id="f_gaId" oninput="Edit.analytics()" placeholder="G-XXXXXXXXXX"></div>
+      <p style="font-size:.83rem;color:var(--ink-soft);line-height:1.6;margin-bottom:14px">Page views, likes, add-to-cart and checkouts are tracked as GA4 events once an ID is set.</p>
     </div>
-    <!-- ACCESS [S-06] Firestore rules template -->
+
+    <!-- ACCOUNT -->
     <div class="cpanel" data-panel="access">
-      <div class="status-banner s-dev" id="settingsStatus"></div>
-      <p style="font-size:.88rem;color:var(--ink-soft);margin-bottom:18px;line-height:1.6">Right now the console is <b>open</b> — first tap walks straight in. Add your details and publish to lock it. After that the studio key asks for email + password before letting anyone in.</p>
-      <div class="field"><label>Admin email</label><input class="input" id="f_adminEmail" placeholder="bernice@email.com" type="email"></div>
-      <div class="field"><label>Firebase config <span class="hint">Paste the whole firebaseConfig object.</span></label><textarea class="textarea mono" id="f_firebase" style="min-height:150px" placeholder='{"apiKey":"…","authDomain":"…","projectId":"…","storageBucket":"…","messagingSenderId":"…","appId":"…"}'></textarea></div>
-      <div class="toggle-row"><div class="tlabel">Sync to the cloud<small>Store works &amp; orders in Firestore, not just this device</small></div><div class="switch" id="sw_cloud" onclick="Settings.toggleCloud()"></div></div>
-      <button class="cbtn cbtn-primary" id="publishBtn" onclick="Settings.publish()">Publish &amp; lock the studio key</button>
-      <button class="cbtn cbtn-danger" id="unpublishBtn" onclick="Settings.unpublish()" style="display:none">Unpublish (back to open mode)</button>
-      <p class="hint" style="margin-top:12px">No Firebase yet? The whole site works on this device. Publishing adds cloud sync + login lock.</p>
-      <!-- [S-06] Firestore Security Rules Template -->
-      <div class="field" style="margin-top:24px">
-        <label>Firestore Security Rules <span class="hint">Copy and paste into Firebase Console → Firestore → Rules</span></label>
-        <textarea class="textarea mono" readonly style="min-height:200px;font-size:.74rem;opacity:.8">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Studio data: public read, admin write only
-    match /sites/{siteId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    // Products: public read, admin write
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    // Orders: admin only
-    match /orders/{orderId} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}</textarea>
+      <div class="status-banner s-live" style="margin-bottom:16px">Signed in as <b id="accEmail"></b></div>
+      <div class="field"><label>Change password <span class="hint">At least 10 characters.</span></label>
+        <div class="pw-wrap"><input class="input" id="accPass1" type="password" placeholder="New password" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
+      <div class="field">
+        <div class="pw-wrap"><input class="input" id="accPass2" type="password" placeholder="Type it again" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="modal-err" id="accErr" role="alert" style="display:none"></div>
+      <button class="cbtn cbtn-primary" onclick="Auth.changePassword()">Save new password</button>
+      <button class="cbtn cbtn-danger" onclick="Auth.signOut()">Sign out of studio</button>
     </div>
   </div>
-  <!-- [S-04] Session timeout indicator -->
   <div class="console-timer" id="consoleTimer"></div>
 </aside>
 
@@ -313,35 +277,48 @@ service cloud.firestore {
   </div>
 </aside>
 
-<!-- LOGIN MODAL [A-01] -->
+<!-- SIGN-IN / RESET / NEW PASSWORD -->
 <div class="overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
   <div class="modal sm">
-    <h3 id="loginTitle">Studio access</h3><p class="msub">This console is locked. Sign in to manage Artsy Knots.</p>
-    <div class="modal-err" id="loginErr" role="alert"></div>
-    <div class="field"><label>Email</label><input class="input" id="loginEmail" type="email" autocomplete="email"></div>
-    <div class="field"><label>Password</label><div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" id="loginPassEye" class="pw-eye" onclick="var p=document.getElementById('loginPass');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-    <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
-    <button class="cbtn cbtn-ghost" onclick="Auth.clearFields();UI.closeAll()">Cancel</button>
+    <h3 id="loginTitle">Studio access</h3>
+    <div class="modal-err" id="loginErr" role="alert" style="display:none"></div>
+
+    <div id="loginView">
+      <p class="msub">Sign in to manage Artsy Knots.</p>
+      <div class="field"><label>Email</label><input class="input" id="loginEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label>Password</label>
+        <div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
+      <button class="cbtn cbtn-ghost" onclick="Auth.show('resetView')">Forgot password?</button>
+      <button class="cbtn cbtn-ghost" onclick="Auth.clearFields();UI.closeAll()">Cancel</button>
+    </div>
+
+    <div id="resetView" style="display:none">
+      <p class="msub">Enter your email and we'll send you a link to choose a new password.</p>
+      <div class="field"><label>Email</label><input class="input" id="resetEmail" type="email" autocomplete="email"></div>
+      <button class="cbtn cbtn-primary" onclick="Auth.sendReset()">Send reset link</button>
+      <button class="cbtn cbtn-ghost" onclick="Auth.show('loginView')">Back to sign in</button>
+    </div>
+
+    <div id="newPassView" style="display:none">
+      <p class="msub">Choose a new password (at least 10 characters).</p>
+      <div class="field"><label>New password</label>
+        <div class="pw-wrap"><input class="input" id="newPass1" type="password" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="field"><label>Confirm password</label>
+        <div class="pw-wrap"><input class="input" id="newPass2" type="password" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <button class="cbtn cbtn-primary" onclick="Auth.completeRecovery()">Save new password</button>
+    </div>
   </div>
 </div>
 
-<!-- SET PASSWORD MODAL -->
-<div class="overlay" id="setPassOverlay" role="dialog" aria-modal="true">
-  <div class="modal sm">
-    <h3>Set your studio password</h3><p class="msub">You'll need your email + this password to access the console.</p>
-    <div class="modal-err" id="setPassErr" role="alert"></div>
-    <div class="field"><label>Password</label><div class="pw-wrap"><input class="input" id="setPass1" type="password" placeholder="Choose a strong password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="var p=document.getElementById('setPass1');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-    <div class="field"><label>Confirm password</label><div class="pw-wrap"><input class="input" id="setPass2" type="password" placeholder="Type it again" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="var p=document.getElementById('setPass2');p.type=p.type==='password'?'text':'password';this.classList.toggle('reveal')" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-    <button class="cbtn cbtn-primary" onclick="Settings._confirmPass()">Set password &amp; publish</button>
-    <button class="cbtn cbtn-ghost" onclick="Settings._cancelPass()">Cancel</button>
-  </div>
-</div>
-
-<!-- EDITOR MODAL [A-01] -->
+<!-- EDITOR -->
 <div class="overlay" id="editorOverlay" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
   <div class="modal">
     <h3 id="editorTitle">Add a work</h3><p class="msub" id="editorSub">Photos sell the piece.</p>
-    <div class="modal-err" id="editorErr" role="alert"></div>
+    <div class="modal-err" id="editorErr" role="alert" style="display:none"></div>
     <div class="field"><label>Title</label><input class="input" id="e_title" placeholder="e.g. Tidal Bloom"></div>
     <div class="field"><label>Description</label><textarea class="textarea" id="e_desc" placeholder="Materials, size, feeling…"></textarea></div>
     <div class="row2">
@@ -365,12 +342,12 @@ service cloud.firestore {
       </div>
       <div class="field"><label>Thumbnail <span class="hint">Auto-detected for YouTube.</span></label><input class="input" id="e_vthumb" placeholder="https://…/thumb.jpg"></div>
     </div>
-    <button class="cbtn cbtn-primary" onclick="Editor.save()">Save work</button>
+    <button class="cbtn cbtn-primary" id="editorSave" onclick="Editor.save()">Save work</button>
     <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Cancel</button>
   </div>
 </div>
 
-<!-- DETAIL / COMMENTS MODAL [A-01] -->
+<!-- DETAIL / COMMENTS -->
 <div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-label="Artwork detail">
   <div class="modal">
     <div class="d-media" id="dMedia"></div>
@@ -393,15 +370,9 @@ service cloud.firestore {
   </div>
 </div>
 
-<!-- [A-01] aria-live for toast announcements -->
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
 
-<!-- [P-06] Firebase SDKs deferred -->
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" defer></script>
 <script src="js/app.js" defer></script>
-
 </body>
 </html>
