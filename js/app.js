@@ -2207,5 +2207,4 @@ async function boot() {
 
   subscribeLive();
 }
-
 document.addEventListener('DOMContentLoaded', boot);
