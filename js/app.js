@@ -446,7 +446,7 @@ const Auth = {
     if (!email || !pass) { this.setErr('Enter your email and password.'); return; }
     this.setErr('');
     const r = await sb.auth.signInWithPassword({ email: email, password: pass });
-    if (r.error || !r.data || !r.data.session) { this.setErr('Email or password not recognised.'); return; }
+    if (r.error || !r.data || !r.data.session) { this.setErr('Password or email not recognised.'); return; }
     const ok = await Splash.run(async function () {
       const a = await Auth.refresh();
       if (a) await Promise.all([Store.loadProducts(), Store.loadCategories(), Store.loadAdminData()]);
@@ -2107,6 +2107,165 @@ const _presentStudio = Console.present;
 Console.present = function () { _presentStudio.call(Console); Studio.refresh(); };
 setInterval(function () { if ($('console') && $('console').classList.contains('show')) Studio.refresh(); }, 30000);
 
+/* ── SITE BANNER (set from the Theme tab) ── */
+const SiteBanner = {
+  sync() {
+    const b = Store.state.layout.banner || {};
+    const text = String(b.text || '').trim().slice(0, 200);
+    const on = !!(b.on && text);
+    let el = $('siteBanner');
+    if (!on) { if (el) el.remove(); }
+    else {
+      if (!el) { el = document.createElement('div'); el.id = 'siteBanner'; el.setAttribute('role', 'status'); document.body.insertBefore(el, document.body.firstChild); }
+      el.textContent = text;
+    }
+    const sw = $('sw_banner'); if (sw) sw.classList.toggle('on', !!b.on);
+    const inp = $('f_banner'); if (inp && document.activeElement !== inp) inp.value = b.text || '';
+  }
+};
+Object.assign(Edit, {
+  toggleBanner() { const b = Store.state.layout.banner || {}; b.on = !b.on; Store.state.layout.banner = b; SiteBanner.sync(); dSave(); UI.hap(); },
+  setBanner() { const b = Store.state.layout.banner || {}; b.text = val('f_banner').trim().slice(0, 200); Store.state.layout.banner = b; SiteBanner.sync(); dSave(); }
+});
+const _dockSyncBanner = Dock.sync;
+Dock.sync = function () { _dockSyncBanner.call(Dock); SiteBanner.sync(); };
+setTimeout(function () { SiteBanner.sync(); }, 900);
+
+/* ── SOLD WORKS: cannot be added to cart or ordered, with a clear notice ── */
+const SoldNotice = {
+  t: null,
+  show() {
+    let el = $('soldNotice');
+    if (!el) { el = document.createElement('div'); el.id = 'soldNotice'; el.setAttribute('role', 'alert'); document.body.appendChild(el); }
+    el.innerHTML = '<b>This piece has been sold.</b><span>It is no longer available to add to cart or to order. For advice on similar works, please contact Bernice, the studio owner.</span>';
+    el.classList.add('show');
+    clearTimeout(this.t);
+    this.t = setTimeout(function () { el.classList.remove('show'); }, 7000);
+    UI.hap([8, 30, 8]);
+  }
+};
+const _cartAddSold = Cart.add;
+Cart.add = function (id) {
+  const p = Store.products.find(function (x) { return x.id === id; });
+  if (p && p.tag === 'sold') { SoldNotice.show(); return false; }
+  return _cartAddSold.call(Cart, id);
+};
+
+/* ── RESET TO TEMPLATE + RESTORE (full snapshot) ── */
+Object.assign(Studio, {
+  async reset() {
+    const word = val('resetWord').trim(), pw = val('resetPw');
+    if (word !== 'RESET') { this.msg('Type RESET in capitals to confirm.'); return; }
+    if (!pw) { this.msg('Enter your password to confirm.'); return; }
+    const who = await sb.auth.getUser();
+    const email = who.data && who.data.user ? who.data.user.email : Auth.email;
+    const c = await sb.auth.signInWithPassword({ email: email, password: pw });
+    if (c.error) { this.msg('That password is not correct. If you have no password yet, use Forgot password? on the sign-in screen.'); return; }
+    if (!confirm('Reset the site to the template? Your current site, works, settings and contact details are kept safely and come back when you tap Restore.')) return;
+    Busy.start('Resetting studio…');
+    const snapshot = JSON.parse(JSON.stringify(Store.state));
+    const r = await sb.rpc('studio_reset', { p_snapshot: snapshot });
+    if (r.error) { Busy.end(); this.msg('Reset failed. Try again.'); return; }
+    Store.state = Store._mg(DEFAULTS, {});
+    Store.state.layout.welcomeAfterReset = true;
+    await Store.saveSettings();
+    await Store.loadProducts();
+    Render.all(); Gallery.apply(); Console.renderProducts(); Console.stats(); SiteBanner.sync();
+    $('resetWord').value = ''; $('resetPw').value = '';
+    Busy.end(); this.msg('Site reset to the template. Tap Restore everything to bring it all back.', true);
+    UI.hap([6, 20, 6]); this.refresh();
+  },
+  async undo() {
+    if (!confirm('Restore the site, works, settings and contact details exactly as they were before the reset? Works added since then are kept.')) return;
+    Busy.start('Restoring…');
+    const r = await sb.rpc('studio_undo_reset');
+    if (r.error) { Busy.end(); this.msg('Could not restore. Try again.'); return; }
+    const snap = r.data && r.data.snapshot;
+    if (snap) { Store.state = Store._mg(DEFAULTS, snap); Store.state.layout.welcomeAfterReset = false; await Store.saveSettings(); }
+    await Store.loadProducts();
+    Render.all(); Gallery.apply(); Console.renderProducts(); Console.stats(); Console.populate(); SiteBanner.sync();
+    Busy.end(); this.msg('Restored. Works added since the reset were kept.', true); Toasts.push('Restored');
+    this.refresh();
+  }
+});
+
+/* ── EXCEL RECORD (editable workbook, readable by people) ── */
+Object.assign(Store, {
+  async exportWorkbook() {
+    if (typeof XLSX === 'undefined') { Toasts.push('Excel export is still loading. Try again in a moment.'); return; }
+    Busy.start('Preparing your record…');
+    let usage = null; try { const u = await sb.rpc('studio_usage'); usage = u.data; } catch (e) {}
+    const now = new Date();
+    const fmt = function (t) { return t ? new Date(t).toLocaleString('en-KE') : ''; };
+    const works = Store.products.filter(function (p) { return p.type !== 'video'; });
+    const videos = Store.products.filter(function (p) { return p.type === 'video'; });
+    const comments = Store.products.reduce(function (a, p) { return a + (p.comments || []).length; }, 0);
+    const likes = Store.products.reduce(function (a, p) { return a + (p.likes || 0); }, 0);
+    const wb = XLSX.utils.book_new();
+    const add = function (name, rows, widths) { const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = widths.map(function (w) { return { wch: w }; }); XLSX.utils.book_append_sheet(wb, ws, name); };
+    const summary = [
+      ['Artsy Knots: Studio Record'],
+      ['Studio', Store.state.brand.name],
+      ['Exported on', now.toLocaleString('en-KE')],
+      [],
+      ['Measure', 'Value'],
+      ['Works on the site', works.length],
+      ['Videos', videos.length],
+      ['Orders', Store.orders.length],
+      ['Commissions', Store.commissions.length],
+      ['Comments', comments],
+      ['Likes', likes]
+    ];
+    if (usage) summary.push(['Database used (bytes)', usage.db_bytes], ['File storage used (bytes)', usage.file_bytes], ['Approximate images', usage.images]);
+    add('Summary', summary, [28, 24]);
+    add('Works', [['Title', 'Type', 'Category', 'Label', 'Price (KES)', 'Dimensions', 'Likes', 'Views', 'Comments', 'Images', 'Created', 'Description', 'First image link']]
+      .concat(Store.products.map(function (p) { return [p.title, p.type || 'artwork', Render.label(p.category), p.tag || '', p.price, p.dims || '', p.likes || 0, p.views || 0, (p.comments || []).length, (p.images || []).length, fmt(p.createdAt), p.desc || '', (p.images || [])[0] || '']; })),
+      [30, 10, 18, 12, 14, 16, 8, 8, 10, 8, 20, 50, 40]);
+    add('Orders', [['Order', 'Date', 'Status', 'Method', 'Customer', 'Address', 'Phone', 'Items', 'Total (KES)']]
+      .concat(Store.orders.map(function (x) { return [x.id, fmt(x.createdAt), x.status, x.method, x.name, x.address, x.phone, x.items.map(function (i) { return i.title + ' x' + i.qty; }).join('; '), x.total]; })),
+      [14, 20, 12, 12, 22, 30, 16, 50, 14]);
+    add('Commissions', [['Name', 'Contact', 'Method', 'Piece', 'Size', 'Colours', 'Place', 'Mood', 'Budget', 'Needed by', 'Reference', 'Details', 'Status', 'Received']]
+      .concat(Store.commissions.map(function (x) { return [x.name, x.contact, x.method, x.piece, x.size, x.colours, x.place, x.mood, x.budget, x.needed, x.reference, x.details, x.status || '', fmt(x.createdAt)]; })),
+      [20, 18, 12, 18, 12, 16, 16, 16, 14, 14, 30, 40, 12, 20]);
+    add('Comments', [['Work', 'Name', 'Comment', 'Date']]
+      .concat(Store.products.reduce(function (a, p) { (p.comments || []).forEach(function (c) { a.push([p.title, c.name || 'Anonymous', c.text || '', fmt(c.ts)]); }); return a; }, [])),
+      [30, 20, 60, 20]);
+    XLSX.writeFile(wb, 'artsy-knots-record-' + now.toISOString().slice(0, 10) + '.xlsx');
+    Busy.end(); Toasts.push('Record downloaded'); UI.hap();
+  }
+});
+
+/* ── SHARE THE QR CODE (image + link) ── */
+Object.assign(Dock, {
+  async shareQr() {
+    const svg = document.querySelector('#qrBox svg');
+    if (!svg) { Toasts.push('The QR code is not ready yet.'); return; }
+    const url = location.origin + location.pathname;
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+    const src = URL.createObjectURL(blob);
+    const img = new Image();
+    try { await new Promise(function (res, rej) { img.onload = res; img.onerror = rej; img.src = src; }); }
+    catch (e) { URL.revokeObjectURL(src); Toasts.push('The QR code could not be prepared. Try again.'); return; }
+    const cv = document.createElement('canvas'); cv.width = 800; cv.height = 800;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, 800, 800); cx.drawImage(img, 40, 40, 720, 720);
+    URL.revokeObjectURL(src);
+    const png = await new Promise(function (res) { cv.toBlob(res, 'image/png'); });
+    const file = new File([png], 'artsy-knots-qr.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: 'Artsy Knots', text: 'Explore Artsy Knots', url: url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(png); a.download = 'artsy-knots-qr.png'; a.click();
+    try { await navigator.clipboard.writeText(url); Toasts.push('QR image saved. Site link copied.'); }
+    catch (e) { Toasts.push('QR image saved to your downloads.'); }
+  }
+});
+
+/* ── SIGN-IN: password form only, always open ── */
+const _paintMethodsPw = Auth.paintMethods;
+Auth.paintMethods = function () { _paintMethodsPw.call(Auth); const pw = $('pwBlock'); if (pw) pw.open = true; };
+setTimeout(function () { const pk = $('pkList'); if (pk && pk.closest('.field')) pk.closest('.field').style.display = 'none'; }, 1200);
+
 /* ── REVEAL ── */
 const Reveal = {
   io: null,
@@ -2207,4 +2366,5 @@ async function boot() {
 
   subscribeLive();
 }
+
 document.addEventListener('DOMContentLoaded', boot);
