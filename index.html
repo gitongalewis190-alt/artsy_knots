@@ -117,10 +117,20 @@
   </p>
 </footer>
 
-<div class="view-fab" id="viewFab">
-  <button data-view="glass" title="Studio glass" onclick="Views.set('glass')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4v6c0 4.5-3.4 7-8 8-4.6-1-8-3.5-8-8V7z"/></svg></button>
-  <button data-view="spatial" title="Spatial float" onclick="Views.set('spatial')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
-  <button data-view="neural" title="Neural space" onclick="Views.set('neural')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="1.5"/><circle cx="18" cy="5" r="1.5"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="1.5"/><circle cx="19" cy="17" r="1.5"/></svg></button>
+<div class="dock" id="dock">
+  <button class="dock-qr" id="dockQr" onclick="Dock.openQr()" aria-label="Artsy Knots QR code and info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17 21h4v-4"/></svg></button>
+  <a class="dock-loc" id="dockLoc" href="#" target="_blank" rel="noopener" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="dockLocTxt"></span></a>
+</div>
+
+<div class="overlay" id="qrOverlay" onclick="if(event.target===this)UI.closeAll()">
+  <div class="modal sm" style="text-align:center">
+    <h3>Artsy Knots</h3>
+    <p class="msub" id="qrInfo"></p>
+    <div class="qr-box" id="qrBox"></div>
+    <p class="msub" style="margin:12px 0 4px">Scan with your phone camera to open the studio.</p>
+    <a class="cbtn cbtn-primary" id="qrOpen" href="#" style="display:block;text-decoration:none;text-align:center">Open the site</a>
+    <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Close</button>
+  </div>
 </div>
 
 <button class="guide-fab" id="guideFab" aria-label="Open the studio guide" onclick="Guide.open()">
@@ -208,6 +218,10 @@
 
     <div class="cpanel" data-panel="theme">
       <div class="toggle-row"><div class="tlabel">Dark / space surface<small>Black canvas for neural &amp; spatial worlds</small></div><div class="switch" id="sw_dark" onclick="Edit.toggleDark()"></div></div>
+      <div class="toggle-row"><div class="tlabel">Neurons &amp; stars background<small>Visitors always see it while this is on. Only you can change it.</small></div><div class="switch on" id="sw_fx" onclick="Edit.toggleFx()"></div></div>
+      <div class="toggle-row"><div class="tlabel">Show location<small>The location pill beside the QR code</small></div><div class="switch on" id="sw_loc" onclick="Edit.toggleLoc()"></div></div>
+      <div class="field"><label>Location text</label><input class="input" id="f_locLabel" placeholder="e.g. Ngong Road, Nairobi" oninput="Edit.setLoc()"></div>
+      <div class="field"><label>Google Maps link <span class="hint">Optional. Blank searches the text above.</span></label><input class="input" id="f_locUrl" placeholder="https://maps.app.goo.gl/…" oninput="Edit.setLoc()"></div>
       <div class="field"><label>Palette</label><div class="swatches" id="paletteSwatches"></div><div class="hint">Amethyst is the default. Pick any palette and it applies on every device.</div></div>
       <div class="field"><label>Custom accent colour</label><input type="color" class="input" id="f_accent" style="height:48px;padding:5px" oninput="Edit.customAccent(this.value)"></div>
     </div>
@@ -287,7 +301,19 @@
 
     <div class="cpanel" data-panel="access">
       <div class="status-banner s-live">Signed in as <b id="accEmail"></b></div>
-      <div class="toggle-row"><div class="tlabel">Studio guide<small>Show the help button on this device</small></div><div class="switch" id="sw_guide" onclick="Guide.toggle()"></div></div>
+      <div class="field"><label>Change email <span class="hint">Confirm in both inboxes. Your sign-in moves to the new address once confirmed.</span></label>
+        <input class="input" id="newEmail" type="email" autocomplete="email" placeholder="new@email.com">
+        <button class="cbtn cbtn-primary" onclick="Studio.changeEmail()">Send confirmation</button></div>
+      <div class="field"><label>Storage <span class="hint">Live. Refreshes every 30 seconds while this panel is open.</span></label>
+        <div id="usageBox"><p class="hint">Reading usage…</p></div></div>
+      <div class="field danger-zone"><label>Reset studio <span class="hint">Hides every work from the site so you can start again. Nothing is lost for 30 days. Type RESET and enter your password to confirm.</span></label>
+        <input class="input" id="resetWord" placeholder="Type RESET" autocomplete="off" autocapitalize="characters">
+        <input class="input" id="resetPw" type="password" placeholder="Your password" autocomplete="current-password">
+        <button class="cbtn cbtn-danger" onclick="Studio.reset()">Reset studio</button>
+        <div id="undoBox" style="display:none"><p class="hint">A reset is active. You have 30 days to undo it.</p><button class="cbtn cbtn-primary" onclick="Studio.undo()">Undo reset and bring everything back</button></div>
+        <p class="modal-err" id="studioMsg" role="status" style="display:none"></p></div>
+      <div class="field"><label>Passkeys on your account <span class="hint">Works on any device where the passkey syncs (iCloud Keychain or Google Password Manager).</span></label><div id="pkList" class="pk-list"><p class="hint">Sign in to manage passkeys.</p></div><button class="cbtn cbtn-primary" onclick="Passkey.addThisDevice()">Add a passkey to this device</button></div>
+      <div class="toggle-row"><div class="tlabel">Studio guide<small>Show the help button for all visitors</small></div><div class="switch" id="sw_guide" onclick="Guide.toggle()"></div></div>
       <div class="field"><label>Change password <span class="hint">At least 10 characters.</span></label>
         <div class="pw-wrap"><input class="input" id="accPass1" type="password" placeholder="New password" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
@@ -374,19 +400,37 @@
 
 <!-- SIGN-IN / RESET / NEW PASSWORD -->
 <div class="overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-  <div class="modal sm">
-    <h3 id="loginTitle">Studio access</h3>
+  <div class="modal sm signin">
+    <div class="si-brand">
+      <div class="si-logo" aria-hidden="true">✦</div>
+      <div><h3 id="loginTitle">Studio access</h3><p class="msub" id="loginSub">Sign in to manage Artsy Knots. Stay signed in on this device.</p></div>
+    </div>
     <div class="modal-err" id="loginErr" role="alert" style="display:none"></div>
 
     <div id="loginView">
-      <p class="msub">Sign in to manage Artsy Knots. You'll stay signed in on this device.</p>
-      <div class="field"><label>Email</label><input class="input" id="loginEmail" type="email" autocomplete="email"></div>
-      <div class="field"><label>Password</label>
-        <div class="pw-wrap"><input class="input" id="loginPass" type="password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="si-methods">
+        <button class="si-btn si-primary" id="btnPasskey" onclick="Auth.passkeyIn()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <span><b>Sign in with a passkey</b><small>Fingerprint or face. No password.</small></span>
+        </button>
+        <button class="si-btn" id="btnGoogle" onclick="Auth.google()"><span class="si-g" aria-hidden="true">G</span><span>Continue with Google</span></button>
+        <div class="si-or" id="siOr"><span>or</span></div>
+        <div class="si-email" id="emailBlock">
+          <label for="loginEmail">Email</label>
+          <input class="input" id="loginEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')Auth.sendCode()">
+          <button class="si-btn" id="btnCode" onclick="Auth.sendCode()">Email me a 6-digit code</button>
+          <div id="codeStep" style="display:none">
+            <input class="input" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" onkeydown="if(event.key==='Enter')Auth.verifyCode()">
+            <button class="si-btn si-primary" onclick="Auth.verifyCode()">Confirm code</button>
+          </div>
+        </div>
+        <details class="si-pw" id="pwBlock"><summary>Use password instead</summary>
+          <div class="field" style="margin-top:6px"><div class="pw-wrap"><input class="input" id="loginPass" type="password" placeholder="Password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
+          <button class="cbtn cbtn-ghost" onclick="Auth.show('resetView')">Forgot password?</button>
+        </details>
       </div>
-      <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
-      <button class="cbtn cbtn-ghost" onclick="Auth.show('resetView')">Forgot password?</button>
-      <button class="cbtn cbtn-ghost" onclick="Auth.clearFields();UI.closeAll()">Cancel</button>
+      <button class="si-cancel" onclick="Auth.clearFields();UI.closeAll()">Cancel</button>
     </div>
 
     <div id="resetView" style="display:none">
@@ -409,6 +453,15 @@
   </div>
 </div>
 
+<div class="overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="modal sm welcome-card">
+    <h3 id="welcomeTitle">Dear Bernice,</h3>
+    <p>Welcome to your studio. Please use the virtual assistant to find your way at any time; you do not have to grow alone. I am here to grow with you.</p>
+    <p>This is a home for all of your works, for exhibition and for sale.</p>
+    <button class="cbtn cbtn-primary" onclick="Studio.dismissWelcome()">Begin</button>
+  </div>
+</div>
+
 <!-- EDITOR -->
 <div class="overlay" id="editorOverlay" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
   <div class="modal">
@@ -417,6 +470,9 @@
     <div class="modal-err" id="editorErr" role="alert" style="display:none"></div>
     <div class="field"><label>Title</label><input class="input" id="e_title" placeholder="e.g. Tidal Bloom"></div>
     <div class="field"><label>Description</label><textarea class="textarea" id="e_desc" placeholder="Materials, size, feeling…"></textarea></div>
+    <div class="field"><label>Label <span class="hint">Shown on the piece. Change it any time.</span></label>
+      <div class="tag-seg" id="e_tagSeg"><button type="button" data-tag="" class="on" onclick="Editor.setTag(this)">None</button><button type="button" data-tag="available" onclick="Editor.setTag(this)">Available</button><button type="button" data-tag="sold" onclick="Editor.setTag(this)">Sold</button><button type="button" data-tag="featured" onclick="Editor.setTag(this)">Featured</button></div>
+      <input class="input" id="e_tagText" maxlength="24" placeholder="Optional word on the label, e.g. Last one" style="margin-top:8px"></div>
     <div class="row2">
       <div class="field"><label>Price (KES)</label><input class="input" id="e_price" type="number" min="0" placeholder="3000"></div>
       <div class="field"><label>Genre</label><select class="select" id="e_cat"></select></div>
@@ -492,6 +548,8 @@
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.1.0/dist/bundle/index.umd.min.js" defer></script>
 <script src="js/app.js" defer></script>
 </body>
 </html>
