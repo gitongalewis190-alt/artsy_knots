@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Artsy Knots — Handmade Art by Bernice Wairimu</title>
 <meta name="description" content="Handmade mats, tufted rugs, canvas art and resin pieces by Bernice Wairimu. Custom commissions from Nairobi.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Artsy Knots">
+<meta property="og:title" content="Artsy Knots — Handmade Art by Bernice Wairimu">
+<meta property="og:description" content="Handmade mats, tufted rugs, canvas art and resin pieces. Explore the studio.">
+<meta property="og:url" content="https://gitongalewis190-alt.github.io/Artsy_Knots/">
+<meta property="og:image" content="https://gitongalewis190-alt.github.io/Artsy_Knots/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" id="themeColor" content="#faf7ff">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,6 +28,7 @@
 <div id="introScreen" class="intro-screen" aria-hidden="true">
   <div class="intro-content">
     <div class="logo-container"><div class="rotating-logo" id="rotatingLogo">A</div></div>
+    <script>try{var c=JSON.parse(localStorage.getItem('ak.cache.v6')||'null');var b=c&&c.brand;var el=document.getElementById('rotatingLogo');if(el&&b){if(b.logoUrl){var i=document.createElement('img');i.src=b.logoUrl;i.alt='';i.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit';el.textContent='';el.appendChild(i);}else if(b.logoLetter){el.textContent=b.logoLetter;}}}catch(e){}</script>
     <div class="intro-text" id="introText"></div>
   </div>
 </div>
@@ -128,6 +138,7 @@
     <p class="msub" id="qrInfo"></p>
     <div class="qr-box" id="qrBox"></div>
     <p class="msub" style="margin:12px 0 4px">Scan with your phone camera to open the studio.</p>
+    <button class="cbtn cbtn-primary" onclick="Dock.shareQr()">Share QR code</button>
     <a class="cbtn cbtn-primary" id="qrOpen" href="#" style="display:block;text-decoration:none;text-align:center">Open the site</a>
     <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Close</button>
   </div>
@@ -184,6 +195,7 @@
       <button class="cbtn cbtn-ghost" onclick="Console.go('works')">Manage works &amp; videos</button>
       <button class="cbtn cbtn-ghost" onclick="Console.go('orders')">View orders &amp; commissions</button>
       <button class="cbtn cbtn-ghost" onclick="Store.exportData()">Download backup</button>
+      <button class="cbtn cbtn-primary" onclick="Store.exportWorkbook()">Export Excel record</button>
     </div>
 
     <div class="cpanel" data-panel="works">
@@ -217,6 +229,8 @@
     </div>
 
     <div class="cpanel" data-panel="theme">
+      <div class="toggle-row"><div class="tlabel">Site banner<small>A message shown across the top of the site</small></div><div class="switch" id="sw_banner" onclick="Edit.toggleBanner()"></div></div>
+      <div class="field"><label>Banner text <span class="hint">Up to 200 characters</span></label><input class="input" id="f_banner" maxlength="200" placeholder="e.g. Free delivery in Nairobi this week" oninput="Edit.setBanner()"></div>
       <div class="toggle-row"><div class="tlabel">Dark / space surface<small>Black canvas for neural &amp; spatial worlds</small></div><div class="switch" id="sw_dark" onclick="Edit.toggleDark()"></div></div>
       <div class="toggle-row"><div class="tlabel">Neurons &amp; stars background<small>Visitors always see it while this is on. Only you can change it.</small></div><div class="switch on" id="sw_fx" onclick="Edit.toggleFx()"></div></div>
       <div class="toggle-row"><div class="tlabel">Show location<small>The location pill beside the QR code</small></div><div class="switch on" id="sw_loc" onclick="Edit.toggleLoc()"></div></div>
@@ -310,7 +324,7 @@
         <input class="input" id="resetWord" placeholder="Type RESET" autocomplete="off" autocapitalize="characters">
         <input class="input" id="resetPw" type="password" placeholder="Your password" autocomplete="current-password">
         <button class="cbtn cbtn-danger" onclick="Studio.reset()">Reset studio</button>
-        <div id="undoBox" style="display:none"><p class="hint">A reset is active. You have 30 days to undo it.</p><button class="cbtn cbtn-primary" onclick="Studio.undo()">Undo reset and bring everything back</button></div>
+        <div id="undoBox" style="display:none"><p class="hint">A reset is active. You have 30 days to undo it.</p><button class="cbtn cbtn-primary" onclick="Studio.undo()">Restore everything</button></div>
         <p class="modal-err" id="studioMsg" role="status" style="display:none"></p></div>
       <div class="field"><label>Passkeys on your account <span class="hint">Works on any device where the passkey syncs (iCloud Keychain or Google Password Manager).</span></label><div id="pkList" class="pk-list"><p class="hint">Sign in to manage passkeys.</p></div><button class="cbtn cbtn-primary" onclick="Passkey.addThisDevice()">Add a passkey to this device</button></div>
       <div class="toggle-row"><div class="tlabel">Studio guide<small>Show the help button for all visitors</small></div><div class="switch" id="sw_guide" onclick="Guide.toggle()"></div></div>
@@ -426,7 +440,7 @@
         </div>
         <details class="si-pw" id="pwBlock"><summary>Use password instead</summary>
           <div class="field" style="margin-top:6px"><div class="pw-wrap"><input class="input" id="loginPass" type="password" placeholder="Password" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')Auth.login()"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-          <button class="cbtn cbtn-primary" onclick="Auth.login()">Enter console</button>
+          <button class="cbtn cbtn-primary" onclick="Auth.login()">Sign in</button>
           <button class="cbtn cbtn-ghost" onclick="Auth.show('resetView')">Forgot password?</button>
         </details>
       </div>
@@ -550,6 +564,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.1.0/dist/bundle/index.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 <script src="js/app.js" defer></script>
 </body>
 </html>
