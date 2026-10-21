@@ -188,7 +188,7 @@ function linkOpen(url) {
 const DEFAULTS = {
   brand: { name: 'Artsy Knots', tag: 'handmade studio', logoUrl: '', logoLetter: 'A', footMark: 'Artsy Knots' },
   theme: { palette: 'amethyst', dark: false, accent: '#8b5cf6', accent2: '#6d28d9', bg1: '#f1ebff', bg2: '#e0d2ff', bg3: '#faf7ff' },
-  layout: { view: 'glass', density: 'standard', shape: 'default', haptics: true, bgMode: 'caustic', introTransition: 'fade' },
+  layout: { fx: true, locOn: true, locLabel: 'Nairobi, Kenya', locUrl: '', guideOn: true, view: 'glass', density: 'standard', shape: 'default', haptics: true, bgMode: 'caustic', introTransition: 'fade' },
   copy: {
     heroEyebrow: 'Handmade in Nairobi · one of a kind',
     heroTitle: 'Texture you can *feel*, art you can hold.',
@@ -283,14 +283,14 @@ function fromRow(r, comments) {
     id: r.id, type: r.type, title: r.title, desc: r.description || '', price: Number(r.price) || 0,
     category: r.category || 'matwork', dims: r.dims || '', images: r.images || [],
     video: r.video_url || '', duration: r.duration || '', vdate: r.video_date || '', vthumb: r.video_thumb || '',
-    likes: r.likes || 0, views: r.views || 0, createdAt: Date.parse(r.created_at) || 0, comments: comments || []
+    likes: r.likes || 0, views: r.views || 0, createdAt: Date.parse(r.created_at) || 0, tag: r.tag || '', tagText: r.tag_text || '', comments: comments || []
   };
 }
 function toRow(p) {
   return {
     type: p.type, title: p.title, description: p.desc || '', price: p.type === 'video' ? 0 : (Number(p.price) || 0),
     category: p.category || 'matwork', dims: p.dims || '', images: p.images || [],
-    video_url: p.video || '', duration: p.duration || '', video_date: p.vdate || null, video_thumb: p.vthumb || ''
+    video_url: p.video || '', duration: p.duration || '', video_date: p.vdate || null, video_thumb: p.vthumb || '', tag: p.tag || null, tag_text: p.tagText || ''
   };
 }
 
@@ -334,7 +334,7 @@ const Store = {
   async loadProducts() {
     if (!sb) return;
     const [p, c] = await Promise.all([
-      sb.from('products').select('*').is('deleted_at', null).order('created_at', { ascending: false }),
+      sb.from('products').select('*').is('deleted_at', null).is('reset_batch', null).order('created_at', { ascending: false }),
       sb.from('comments').select('*').order('created_at', { ascending: true })
     ]);
     if (p.error) { console.warn('products', p.error); return; }
@@ -453,7 +453,7 @@ const Auth = {
       return a;
     });
     if (!ok) { await sb.auth.signOut(); this.isAdmin = false; this.setErr('This account does not have studio access.'); return; }
-    this.clearFields(); UI.closeAll();
+    this.pwOnly = false; this.clearFields(); UI.closeAll();
     Console.populate(); Console.present();
     Render.all(); Gallery.apply();
     Toasts.push('Welcome back ✨'); UI.hap();
@@ -646,11 +646,12 @@ const Gallery = {
         : '<div class="body"><h3>' + esc(p.title) + '</h3><p class="desc">' + esc(p.desc) + '</p>' + (p.dims ? '<div class="dims">' + esc(p.dims) + '</div>' : '') + '<div class="meta"><span class="price">' + Render.money(p.price) + '</span><span class="tag">' + esc(Render.label(p.category)) + '</span></div></div>';
       const actions = '<div class="actions" style="padding:0 22px 18px">'
         + '<button class="act act-like act-mini' + (isLiked ? ' liked' : '') + '" id="lb-' + p.id + '" onclick="event.stopPropagation();Gallery.like(\'' + p.id + '\')" aria-label="Like">' + ic('heart', 16, isLiked) + '</button>'
+        + Gallery.cmtBtn(p)
         + (isVid
           ? '<button class="act act-cart" style="flex:1" onclick="event.stopPropagation();Detail.open(\'' + p.id + '\')">Watch</button>'
           : '<button class="act act-cart" style="flex:1" onclick="event.stopPropagation();Cart.add(\'' + p.id + '\')">Add to cart</button><button class="act act-order" style="flex:1" onclick="event.stopPropagation();Checkout.orderNow(\'' + p.id + '\')">Order now</button>')
         + '</div>';
-      return '<article class="card" style="--fd:' + fd + '" onclick="Detail.open(\'' + p.id + '\')"><div class="ph">' + media + play + '<span class="like-pill">' + ic('heart', 14, isLiked) + ' <span id="lk-' + p.id + '">' + p.likes + '</span></span></div>' + body + actions + '</article>';
+      return '<article class="card" style="--fd:' + fd + '"' + (p.tag === 'sold' ? ' data-sold="1"' : '') + ' onclick="Detail.open(\'' + p.id + '\')"><div class="ph">' + media + play + Render.tag(p) + '<span class="like-pill">' + ic('heart', 14, isLiked) + ' <span id="lk-' + p.id + '">' + p.likes + '</span></span></div>' + body + actions + Gallery.cc(p) + '</article>';
     }).join('');
     const modalOpen = !!document.querySelector('.overlay.show');
     if (modalOpen) { grid.innerHTML = html; grid.style.opacity = '1'; Physics.bindTilt(); Reveal.scan(); return; }
@@ -707,6 +708,38 @@ const Media = {
   },
   providerLabel(url) { const v = this.parse(url); return { youtube: 'YouTube', vimeo: 'Vimeo', tiktok: 'TikTok', instagram: 'Instagram', file: 'Video', link: 'Video', none: '' }[v.provider] || 'Video'; }
 };
+
+/* ── CARD COMMENTS + TAGS ── */
+Render.tag = function (p) {
+  if (!p.tag) return '';
+  const nm = { available: 'Available', sold: 'Sold', featured: 'Featured' };
+  return '<span class="tagbadge tg-' + esc(p.tag) + '">' + esc(p.tagText || nm[p.tag] || '') + '</span>';
+};
+Object.assign(Gallery, {
+  cmtBtn(p) {
+    return '<button class="act act-cmt" onclick="event.stopPropagation();Gallery.focusCmt(\'' + p.id + '\')" aria-label="Comments"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span id="cn-' + p.id + '">' + p.comments.length + '</span></button>';
+  },
+  cc(p) {
+    return '<div class="cc" onclick="event.stopPropagation()"><div class="cc-l" id="ccl-' + p.id + '">' + this.ccList(p) + '</div><div class="cc-row"><input id="cci-' + p.id + '" maxlength="300" placeholder="Write a comment…" aria-label="Comment" onkeydown="if(event.key===\'Enter\')Gallery.cardComment(\'' + p.id + '\')"><button class="act act-send" onclick="Gallery.cardComment(\'' + p.id + '\')">Post</button></div></div>';
+  },
+  ccList(p) {
+    const last = p.comments.slice(-2).map(function (c) { return '<p class="cc-i"><b>' + esc(c.name || 'Anonymous') + '</b> ' + esc(c.text) + '</p>'; }).join('');
+    return last || '<p class="cc-e">Be the first to comment.</p>';
+  },
+  focusCmt(id) { const i = $('cci-' + id); if (i) i.focus(); },
+  async cardComment(id) {
+    const p = Store.products.find(function (x) { return x.id === id; }); if (!p) return;
+    const inp = $('cci-' + id), text = inp ? inp.value.trim().slice(0, 300) : '';
+    if (!text) { Toasts.push('Write something first.'); return; }
+    let name = 'Anonymous'; try { name = localStorage.getItem('ak.name') || name; } catch (e) {}
+    const r = sb ? await sb.from('comments').insert({ product_id: p.id, name: name, body: text }) : { error: null };
+    if (r.error) { Toasts.push('Could not post your comment. Try again.'); return; }
+    p.comments.push({ name: name, text: text, ts: Date.now() });
+    inp.value = '';
+    $('ccl-' + id).innerHTML = this.ccList(p); $('cn-' + id).textContent = p.comments.length;
+    Toasts.push('Comment posted'); UI.hap([6, 20, 6]); GA.event('comment', { id: p.id });
+  }
+});
 
 /* ── DETAIL + COMMENTS ── */
 const Detail = {
@@ -771,6 +804,7 @@ const Detail = {
   async comment() {
     const p = Store.products.find(function (x) { return x.id === Detail.id; }); if (!p) return;
     const name = (val('cmtName').trim() || 'Anonymous').slice(0, 60);
+    if (val('cmtName').trim()) { try { localStorage.setItem('ak.name', name); } catch (e) {} }
     const text = val('cmtText').trim().slice(0, 1000);
     if (!text) { Toasts.push('Write something first.'); return; }
     const btn = document.querySelector('#detailOverlay .cbtn-primary');
@@ -1106,13 +1140,35 @@ const Orders = {
 };
 
 /* ── VIEWS ── */
+const Dock = {
+  sync() {
+    const l = Store.state.layout, a = $('dockLoc'); if (!a) return;
+    const on = l.locOn !== false && String(l.locLabel || '').trim();
+    a.style.display = on ? '' : 'none';
+    if (on) { $('dockLocTxt').textContent = l.locLabel; a.href = l.locUrl || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.locLabel)); }
+    document.body.dataset.fx = (l.fx !== false) ? '1' : '0';
+    const fx = $('sw_fx'); if (fx) fx.classList.toggle('on', l.fx !== false);
+    const lo = $('sw_loc'); if (lo) lo.classList.toggle('on', l.locOn !== false);
+    const a1 = $('f_locLabel'); if (a1 && document.activeElement !== a1) a1.value = l.locLabel || '';
+    const a2 = $('f_locUrl'); if (a2 && document.activeElement !== a2) a2.value = l.locUrl || '';
+  },
+  openQr() {
+    const url = location.origin + location.pathname, l = Store.state.layout;
+    const foot = $('footLine') ? $('footLine').textContent.replace(/\s+/g, ' ').trim() : '';
+    $('qrInfo').textContent = foot + ((l.locOn !== false && l.locLabel) ? ' · ' + l.locLabel : '');
+    try { const q = qrcode(0, 'M'); q.addData(url); q.make(); $('qrBox').innerHTML = q.createSvgTag({ cellSize: 5, margin: 2, scalable: true }); }
+    catch (e) { $('qrBox').innerHTML = '<p class="hint">' + esc(url) + '</p>'; }
+    $('qrOpen').href = url; UI.openOverlay('qrOverlay'); UI.hap();
+  }
+};
 const Views = {
   set(v) {
+    if (!Auth.isAdmin) return;
     Store.state.layout.view = v; Render.theme(); Console.renderLayout(); dSave();
-    Physics.neuralOn = (v !== 'glass'); UI.hap();
+    Physics.neuralOn = (Store.state.layout.fx !== false); UI.hap();
     if (v !== 'glass' && !Store.state.theme.dark) Toasts.push('Tip: pick a black palette in Theme for the full space feel.');
   },
-  syncFab() { const v = Store.state.layout.view; document.querySelectorAll('#viewFab button').forEach(function (b) { b.classList.toggle('sel', b.dataset.view === v); }); }
+  syncFab() { Dock.sync(); }
 };
 
 /* ── SAVE (debounced) ── */
@@ -1169,6 +1225,9 @@ const Edit = {
   payments() { const m = Store.state.payments.mpesa; m.shortcode = this.v('f_mp_shortcode'); m.endpoint = this.v('f_mp_endpoint'); m.account = this.v('f_mp_account'); m.callback = this.v('f_mp_callback'); dSave(); },
   analytics() { Store.state.analytics.gaId = this.v('f_gaId').trim(); dSave(); GA.init(); },
   toggleDark() { const sw = $('sw_dark'); sw.classList.toggle('on'); Store.state.theme.dark = sw.classList.contains('on'); Render.theme(); dSave(); },
+  toggleFx() { const l = Store.state.layout; l.fx = (l.fx === false); Physics.neuralOn = (l.fx !== false); Dock.sync(); dSave(); UI.hap(); },
+  toggleLoc() { const l = Store.state.layout; l.locOn = (l.locOn === false); Dock.sync(); dSave(); UI.hap(); },
+  setLoc() { const l = Store.state.layout; l.locLabel = val('f_locLabel').trim().slice(0, 80); l.locUrl = val('f_locUrl').trim().slice(0, 300); Dock.sync(); dSave(); },
   toggleHaptics() { const sw = $('sw_haptics'); sw.classList.toggle('on'); Store.state.layout.haptics = sw.classList.contains('on'); dSave(); },
   palette(key) {
     const p = PALETTES[key], t = Store.state.theme;
@@ -1187,8 +1246,11 @@ const Settings = {
 /* ── EDITOR (works and videos) ── */
 const Editor = {
   eid: null, kind: 'artwork', imgs: [],
+  tag: '',
+  setTag(b) { this.tag = b.dataset.tag || ''; this.paintTag(); UI.hap(); },
+  paintTag() { const t = this.tag || ''; document.querySelectorAll('#e_tagSeg button').forEach(function (b) { b.classList.toggle('on', (b.dataset.tag || '') === t); }); },
   openNew(kind) {
-    this.eid = null; this.kind = kind; this.imgs = [];
+    this.eid = null; this.kind = kind; this.imgs = []; this.tag = ''; $('e_tagText').value = ''; this.paintTag();
     $('editorTitle').textContent = kind === 'video' ? 'Add a video' : 'Add an artwork';
     $('editorSub').textContent = kind === 'video' ? 'Paste a YouTube, TikTok or Vimeo link.' : 'Photos sell the piece. Bright, clear images work best.';
     ['e_title', 'e_desc', 'e_price', 'e_dims', 'e_image', 'e_video', 'e_duration', 'e_vdate', 'e_vthumb'].forEach(function (id) { $(id).value = ''; });
@@ -1200,6 +1262,7 @@ const Editor = {
   openEdit(id) {
     const p = Store.products.find(function (x) { return x.id === id; }); if (!p) return;
     this.eid = id; this.kind = p.type || 'artwork'; this.imgs = p.images.slice();
+    this.tag = p.tag || ''; $('e_tagText').value = p.tagText || ''; this.paintTag();
     $('editorTitle').textContent = this.kind === 'video' ? 'Edit video' : 'Edit artwork';
     $('editorSub').textContent = 'Changes publish to every device when saved.';
     $('e_title').value = p.title; $('e_desc').value = p.desc; $('e_price').value = p.price || '';
@@ -1259,6 +1322,7 @@ const Editor = {
       const price = Number(val('e_price')); if (!price || price < 0) { fail('Set a price.'); return; }
       Object.assign(base, { type: 'artwork', price: price, dims: val('e_dims').trim() });
     }
+    base.tag = this.tag || ''; base.tagText = val('e_tagText').trim().slice(0, 24);
     btn.disabled = true; btn.textContent = 'Saving…';
     Progress.show();
     try {
@@ -1313,6 +1377,7 @@ const Console = {
   async open() {
     const ok = await Auth.refresh();
     if (!ok) { this.openLogin(); return; }
+    if (Lock.needsUnlock()) { Auth.pwOnly = false; this.openLogin(); Auth.setErr('Welcome back. Use your passkey or password.', true); return; }
     Busy.start('Loading studio…');
     await this.load();
     Busy.end();
@@ -1341,7 +1406,7 @@ const Console = {
   },
   present() {
     $('console').classList.add('show'); $('scrim').classList.add('show');
-    UI.lockScroll(); UI.hap();
+    UI.lockScroll(); UI.hap(); Lock.start();
     $('accEmail').textContent = Auth.email;
     this.renderAll();
     Guide.sync();
@@ -1349,9 +1414,10 @@ const Console = {
   renderAll() {
     this.stats(); this.renderProducts(); this.renderGenres(); this.renderTrash(); Orders.render(); this.renderInsights();
   },
-  close() {
+  close(why) {
     $('console').classList.remove('show'); $('scrim').classList.remove('show');
     UI.unlockScroll();
+    if (why !== 'idle') Lock.leave();
   },
   async go(tab) {
     await this.open();
@@ -1525,10 +1591,14 @@ const UI = {
     if (!$('console').classList.contains('show')) $('scrim').classList.remove('show');
     UI.unlockScroll();
   },
-  lockScroll() { document.body.style.overflow = 'hidden'; document.body.classList.add('studio-open'); },
+  lockScroll() {
+    if (!document.body.classList.contains('scroll-locked')) { UI._y = window.scrollY || 0; document.body.style.top = '-' + UI._y + 'px'; document.body.classList.add('scroll-locked'); }
+    document.body.style.overflow = 'hidden'; document.body.classList.add('studio-open');
+  },
   unlockScroll() {
     if (document.querySelector('.overlay.show,.console.show,.cart.show,.guide-panel.show')) return;
     document.body.style.overflow = ''; document.body.classList.remove('studio-open');
+    if (document.body.classList.contains('scroll-locked')) { document.body.classList.remove('scroll-locked'); document.body.style.top = ''; window.scrollTo({ top: UI._y || 0, behavior: 'instant' }); }
   },
   hap(p) { try { if (Store.state.layout.haptics && navigator.vibrate) navigator.vibrate(p || 10); } catch (e) {} }
 };
@@ -1595,12 +1665,17 @@ const Physics = {
         _ca2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#6d28d9';
       }
       ctx.clearRect(0, 0, w, h);
+      if (Store.state.layout.fx !== false && Store.state.layout.bgMode !== 'stars') self.drawStars(ctx, w, h);
       const ns = self.nodes;
       for (let i = 0; i < ns.length; i++) { const n = ns[i]; n.x += n.vx; n.y += n.vy; if (n.x < 0 || n.x > w) n.vx *= -1; if (n.y < 0 || n.y > h) n.vy *= -1; const dx = n.x - mouse.x, dy = n.y - mouse.y, d = Math.hypot(dx, dy); if (d < 140 && d > 0) { n.x += dx / d * .9; n.y += dy / d * .9; } }
       for (let i = 0; i < ns.length; i++) { for (let j = i + 1; j < ns.length; j++) { const a = ns[i], b = ns[j]; const dist = Math.hypot(a.x - b.x, a.y - b.y); if (dist < 130) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = self._rgba(_ca, (1 - dist / 130) * .3); ctx.lineWidth = 1; ctx.stroke(); } } }
       for (let i = 0; i < ns.length; i++) { const n = ns[i]; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fillStyle = self._rgba(_ca2, .85); ctx.shadowBlur = 9; ctx.shadowColor = _ca; ctx.fill(); ctx.shadowBlur = 0; }
     };
     loop();
+  },
+  drawStars(ctx, w, h) {
+    const S = this._st || (this._st = Array.from({ length: 120 }, function () { return { x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + .3, a: Math.random() * 6.28, v: .004 + Math.random() * .012 }; }));
+    S.forEach(function (s) { s.a += s.v; const al = (Math.sin(s.a) + 1) / 2 * .7 + .15; ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, 6.2832); ctx.fillStyle = 'rgba(196,181,253,' + al.toFixed(2) + ')'; ctx.fill(); });
   },
   initStars() {
     if (this._starsRunning) return;
@@ -1637,10 +1712,13 @@ function tokensOf(q) {
   return Array.from(out).filter(Boolean);
 }
 const Guide = {
-  on: (function () { try { return localStorage.getItem('ak.guide') !== 'off'; } catch (e) { return true; } })(),
+  on: true,
   timer: null, logTimer: null,
   entries() {
     const pub = [
+      { keys: ['tag', 'label', 'available', 'sold', 'featured', 'stock', 'green', 'red', 'blue'], title: 'Labels on pieces', body: 'Green Available means it can be ordered now. Red Sold means it has found its home. Blue Featured marks the studio’s favourites.' },
+      { keys: ['qr', 'scan', 'code', 'share', 'location', 'where', 'map', 'address', 'find you', 'directions'], title: 'QR code and location', body: 'Tap the QR button at the bottom right to scan or share the studio. Tap the location pill beside it to open the studio on Google Maps.' },
+      { keys: ['comment', 'comments', 'reply', 'review', 'opinion'], title: 'Comment on any piece', body: 'Every piece has a comment box right on its card. Type your thought and tap Post. No need to open the piece first.' },
       { keys: ['order', 'buy', 'cart', 'checkout', 'purchase', 'pay'], title: 'Order a piece', body: 'Tap Add to cart on any piece, or Order now. Open the cart and tap Checkout. Enter your full name and delivery address, pick WhatsApp, SMS or Email, then edit the message if you like and send it.', act: 'cart', label: 'Open cart' },
       { keys: ['commission', 'custom', 'bespoke', 'made', 'request'], title: 'Commission a piece', body: 'Answer five short steps: what you want, size and colour, where it will live and how it should feel, budget and timing, then your details. The studio receives it and replies on the method you choose.', act: 'commission', label: 'Start a commission' },
       { keys: ['like', 'heart', 'love', 'favourite', 'favorite', 'comment', 'review', 'reply'], title: 'Like and comment', body: 'Tap the heart to like a piece. Open a piece to read or leave a comment. Your likes stay on this device.' },
@@ -1651,6 +1729,17 @@ const Guide = {
       { keys: ['guide', 'help', 'turn off', 'hide', 'disable', 'switch off'], title: 'The guide', body: 'The guide is the round help button at the bottom left. Switch it off or on from the switch at the top of this panel.', act: 'guide-off', label: 'Turn guide off' }
     ];
     const admin = [
+      { keys: ['sign in', 'login', 'log in', 'code', 'otp', 'not arriving', 'locked', 'timeout', 'cannot', 'cant', 'can\'t', 'trouble', 'problem', 'error', 'help', 'broken', 'fix', 'not working'], title: 'Cannot sign in', body: 'Check the email spelling. The code expires quickly, so request a new one. If it does not arrive within two minutes, check Spam. After an inactivity lock, enter your password.', act: 'tab:access', label: 'Open Account' },
+      { keys: ['passkey', 'fingerprint', 'face', 'biometric'], title: 'Passkey does not work', body: 'Use the phone where you added the passkey. Passkeys sync through iCloud or Google, so a new phone needs its own passkey. If it fails, sign in with the email code and add it again.', act: 'tab:access', label: 'Open Account' },
+      { keys: ['missing', 'gone', 'disappeared', 'not showing', 'not appearing', 'work missing', 'product'], title: 'A work is missing', body: 'Check Recently deleted in Works and restore it from there. If you reset the studio recently, use Undo in Account within 30 days to bring every work back.', act: 'tab:works', label: 'Open Works' },
+      { keys: ['image', 'photo', 'picture', 'not loading', 'link'], title: 'Image does not show', body: 'The image link must start with https:// and open in a browser. Upload the photo again or paste a fresh link. JPG files under 300 KB load fastest.', act: 'tab:works', label: 'Open Works' },
+      { keys: ['storage', 'space', 'full', 'limit', 'memory', 'database', 'usage'], title: 'Storage is getting full', body: 'Open Account and read the Storage panel. Compress photos to under 300 KB before uploading, remove works you no longer need, and avoid large videos. Free limits are 500 MB for the database and 1 GB for files.', act: 'tab:access', label: 'Open Account' },
+      { keys: ['comment', 'comments', 'post'], title: 'Comment will not post', body: 'Write something first. Comments are limited to 300 characters. If it still fails, check the connection and try again.' },
+      { keys: ['reset', 'undo', 'restore', 'revoke', 'bring back'], title: 'Undo a reset', body: 'Open Account and look at Reset studio. While a reset is active, Undo brings every work back. Works you added after the reset stay.', act: 'tab:access', label: 'Open Account' },
+      { keys: ['change email', 'new email', 'email change', 'email'], title: 'Change your email', body: 'Open Account, enter the new email and send the confirmation. Open the link in both inboxes. Then sign in again with the new email.', act: 'tab:access', label: 'Open Account' },
+      { keys: ['label', 'tag', 'available', 'sold', 'featured', 'green', 'red', 'blue'], title: 'Add or change a label', body: 'Works tab, then Add artwork or Edit. Under Label, pick None, Available (green), Sold (red) or Featured (blue). Type an optional word to show instead of the default text.', act: 'tab:works', label: 'Go to Works' },
+      { keys: ['passkey', 'fingerprint', 'face', 'biometric', 'fast', 'lock', 'timeout', 'inactive', 'locked'], title: 'Passkey and auto-lock', body: 'The studio locks after 8 minutes of inactivity and then asks for your password. If you close it with the X, you can come back without a password for 10 minutes. After that, use your passkey or password. Turn on the passkey in Account.', act: 'tab:access', label: 'Go to Account' },
+      { keys: ['qr', 'location', 'map', 'neurons', 'stars', 'background', 'visitors'], title: 'QR, location and background', body: 'Theme tab. Switch the neurons and stars background on or off for all visitors, turn the location pill on or off, and set its text and Google Maps link.', act: 'tab:theme', label: 'Go to Theme' },
       { keys: ['add', 'new', 'upload', 'photo', 'artwork', 'picture', 'work', 'image'], title: 'Add an artwork', body: 'Works tab, then + Add artwork. Give it a title and price, add photos (you’ll see the percentage as they upload), choose a genre and save.', act: 'tab:works', label: 'Go to Works' },
       { keys: ['video', 'youtube', 'tiktok', 'link', 'thumbnail'], title: 'Add a video', body: 'Works tab, then + Add video. Paste the YouTube, TikTok or Vimeo link. The thumbnail fills in automatically for YouTube.', act: 'tab:works', label: 'Go to Works' },
       { keys: ['delete', 'remove', 'trash', 'bin', 'restore', 'recover', 'undo', '30', 'days'], title: 'Delete and restore', body: 'Delete moves a work to Recently deleted, where it waits 30 days. Restore brings it back, or delete it forever from that list.', act: 'tab:works', label: 'Go to Works' },
@@ -1666,16 +1755,26 @@ const Guide = {
       { keys: ['questions', 'visitors', 'asked', 'searched', 'insight', 'unanswered'], title: 'Visitor questions', body: 'Overview lists the questions visitors asked the guide that it could not answer. Use them to decide what to add next.', act: 'tab:overview', label: 'Go to Overview' },
       { keys: ['guide', 'help', 'turn off', 'hide', 'disable', 'switch off'], title: 'The guide', body: 'Switch the guide on or off from the switch at the top of this panel, or from Account.', act: 'guide-off', label: 'Turn guide off' }
     ];
-    return Auth.isAdmin ? pub.concat(admin) : pub;
+    const ps = Store.products.filter(function (p) { return p.type !== 'video'; });
+    const av = ps.filter(function (p) { return p.tag === 'available'; }), so = ps.filter(function (p) { return p.tag === 'sold'; }), ft = ps.filter(function (p) { return p.tag === 'featured'; });
+    const pr = ps.map(function (p) { return p.price; }).filter(Boolean).sort(function (a, b) { return a - b; });
+    const top = ps.slice().sort(function (a, b) { return b.likes - a.likes; })[0];
+    const live = [];
+    if (ps.length) live.push({ keys: ['how many', 'pieces', 'works', 'collection', 'count', 'stock', 'available', 'sold'], title: 'In the studio right now', body: ps.length + ' works listed' + (av.length ? ', ' + av.length + ' Available' : '') + (so.length ? ', ' + so.length + ' Sold' : '') + (ft.length ? ', ' + ft.length + ' Featured' : '') + '.' });
+    if (pr.length) live.push({ keys: ['price', 'cost', 'cheapest', 'expensive', 'budget', 'how much', 'range', 'affordable'], title: 'Prices', body: 'Works range from ' + Render.money(pr[0]) + ' to ' + Render.money(pr[pr.length - 1]) + '.' });
+    if (ft.length) live.push({ keys: ['featured', 'best', 'recommend', 'favourite', 'favorite'], title: 'Featured works', body: ft.slice(0, 3).map(function (p) { return p.title; }).join(', ') + '.' });
+    if (top && top.likes) live.push({ keys: ['liked', 'popular', 'most', 'top', 'trending', 'loved'], title: 'Most loved piece', body: top.title + ' has ' + top.likes + ' likes.', act: 'work:' + top.id, label: 'Open it' });
+    return (Auth.isAdmin ? pub.concat(admin) : pub).concat(live);
   },
   sync() {
     $('guideFab').classList.toggle('show', this.on);
     $('sw_guide').classList.toggle('on', this.on);
-    $('sw_guide_panel').classList.toggle('on', this.on);
+    $('sw_guide_panel').classList.toggle('on', this.on); $('sw_guide_panel').style.display = Auth.isAdmin ? '' : 'none';
     if (!this.on) { $('guideHint').classList.remove('show'); this.close(true); }
   },
   init() {
-    this.sync();
+    this.on = Store.state.layout.guideOn !== false;
+    this.sync(); this.nudge();
     let hinted = false; try { hinted = localStorage.getItem('ak.hinted') === '1'; } catch (e) {}
     if (this.on && !hinted) {
       setTimeout(function () {
@@ -1690,8 +1789,8 @@ const Guide = {
     });
   },
   toggle() {
-    this.on = !this.on;
-    try { localStorage.setItem('ak.guide', this.on ? 'on' : 'off'); } catch (e) {}
+    if (!Auth.isAdmin) { Toasts.push('Only the studio can switch the guide off.'); return; }
+    this.on = !this.on; Store.state.layout.guideOn = this.on; dSave();
     this.sync();
     Toasts.push(this.on ? 'Guide is on' : 'Guide is off');
     UI.hap();
@@ -1710,6 +1809,28 @@ const Guide = {
     if (!silent) $('scrim').classList.remove('show');
     UI.unlockScroll();
   },
+  near(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return false;
+    const lim = Math.max(a.length, b.length) >= 7 ? 2 : 1;
+    const d = []; for (let i = 0; i <= a.length; i++) { d[i] = [i]; } for (let k = 1; k <= b.length; k++) d[0][k] = k;
+    for (let i = 1; i <= a.length; i++) for (let k = 1; k <= b.length; k++) d[i][k] = Math.min(d[i - 1][k] + 1, d[i][k - 1] + 1, d[i - 1][k - 1] + (a[i - 1] === b[k - 1] ? 0 : 1));
+    return d[a.length][b.length] <= lim;
+  },
+  nudge() {
+    const gaps = [2, 3, 4, 5], msgs = ['Need a hand? Ask the guide.', 'Looking for something? The guide can find it.', 'Curious about prices or custom pieces? Ask the guide.', 'Questions about ordering? The guide knows.'];
+    let i = 0;
+    const step = function () {
+      if (i >= gaps.length) return;
+      setTimeout(function () {
+        if (Guide.on && !$('guidePanel').classList.contains('show') && !$('console').classList.contains('show') && !document.querySelector('.overlay.show')) {
+          const h = $('guideHint'); h.firstElementChild.textContent = msgs[i]; h.classList.add('show');
+          setTimeout(function () { h.classList.remove('show'); }, 8000);
+        }
+        i++; step();
+      }, gaps[i] * 60000);
+    };
+    step();
+  },
   onType() { clearTimeout(this.timer); this.timer = setTimeout(function () { Guide.search(val('guideQ')); }, 160); },
   search(q) {
     const qn = norm(q), toks = tokensOf(q), studio = Auth.isAdmin;
@@ -1719,6 +1840,7 @@ const Guide = {
       if (qn && hay.indexOf(qn) >= 0) s += 6;
       toks.forEach(function (t) {
         if (e.keys.some(function (k) { return k === t || (t.length > 2 && k.indexOf(t) === 0); })) s += 4;
+        else if (t.length > 3 && e.keys.some(function (k) { return Guide.near(k, t); })) s += 3;
         else if (t.length > 2 && hay.indexOf(t) >= 0) s += 1;
       });
       return { e: e, s: s };
@@ -1774,6 +1896,215 @@ const Guide = {
   }
 };
 
+/* ── STUDIO LOCK: 8 min idle = password; closing with X = 10 min grace; passkey for fast sign-in ── */
+const Lock = {
+  IDLE: 8 * 60 * 1000, GRACE: 10 * 60 * 1000, idleT: null, last: Date.now(), _hooked: false,
+  start() {
+    this.touch();
+    if (this._hooked) return; this._hooked = true;
+    ['pointerdown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(function (ev) {
+      document.addEventListener(ev, function () { if ($('console').classList.contains('show')) Lock.touch(); }, { passive: true, capture: true });
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) Lock.check(); });
+  },
+  touch() { this.last = Date.now(); clearTimeout(this.idleT); this.idleT = setTimeout(function () { Lock.check(); }, this.IDLE + 300); },
+  check() {
+    if (!$('console').classList.contains('show')) return;
+    const left = this.IDLE - (Date.now() - this.last);
+    if (left <= 0) this.timeout();
+    else { clearTimeout(this.idleT); this.idleT = setTimeout(function () { Lock.check(); }, left + 300); }
+  },
+  async timeout() {
+    clearTimeout(this.idleT);
+    Console.close('idle');
+    try { localStorage.removeItem('ak.left'); } catch (e) {}
+    if (sb) { try { await sb.auth.signOut(); } catch (e) {} }
+    Auth.isAdmin = false; Auth.email = ''; Auth.pwOnly = true;
+    Console.openLogin();
+    Auth.setErr('Locked after 8 minutes of inactivity. Enter your password to continue.');
+  },
+  leave() { clearTimeout(this.idleT); try { localStorage.setItem('ak.left', String(Date.now())); } catch (e) {} },
+  needsUnlock() {
+    try { const t = Number(localStorage.getItem('ak.left') || 0); return t > 0 && (Date.now() - t) >= this.GRACE; } catch (e) { return false; }
+  }
+};
+const Passkey = {
+  fn: SUPABASE_URL + '/functions/v1/passkey',
+  ok() { return !!(window.PublicKeyCredential && window.SimpleWebAuthnBrowser); },
+  async call(path, body, signedIn) {
+    let token = SUPABASE_KEY;
+    if (signedIn) {
+      const s = await sb.auth.getSession();
+      token = (s.data && s.data.session) ? s.data.session.access_token : '';
+      if (!token) throw new Error('Sign in first, then add a passkey.');
+    }
+    const r = await fetch(this.fn + '/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + token }, body: JSON.stringify(body || {}) });
+    const j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || ('Something went wrong (' + r.status + ').'));
+    return j;
+  },
+  msg(e) {
+    if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) return 'No passkey was used. Try Google, an email code or your password.';
+    return (e && e.message) || 'Something went wrong. Try again.';
+  },
+  device() { const u = navigator.userAgent; return /iPhone|iPad/.test(u) ? 'iPhone or iPad' : /Android/.test(u) ? 'Android' : /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows PC' : 'This device'; },
+  async addThisDevice() {
+    if (!this.ok()) { Toasts.push('Passkeys are not supported in this browser.'); return; }
+    try {
+      const o = await this.call('register-options', {}, true);
+      const r = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: o.options });
+      await this.call('register-verify', { response: r, label: this.device() }, true);
+      Toasts.push('Passkey added. Next time, one tap to sign in.'); UI.hap([6, 20, 6]);
+      this.renderList();
+    } catch (e) { Toasts.push(this.msg(e)); }
+  },
+  async remove(id) {
+    try { await this.call('remove', { id: id }, true); Toasts.push('Passkey removed.'); this.renderList(); }
+    catch (e) { Toasts.push(this.msg(e)); }
+  },
+  async renderList() {
+    const box = $('pkList'); if (!box) return;
+    try {
+      const j = await this.call('list', {}, true);
+      const rows = j.items || [];
+      box.innerHTML = rows.length
+        ? rows.map(function (x) { return '<div class="pk-row"><span><b>' + esc(x.label || 'Passkey') + '</b><small>Added ' + new Date(x.created_at).toLocaleDateString() + '</small></span><button class="cbtn cbtn-ghost pk-rm" onclick="Passkey.remove(\'' + esc(x.id) + '\')">Remove</button></div>'; }).join('')
+        : '<p class="hint">No passkeys yet. Add one below for one-tap sign-in.</p>';
+    } catch (e) { box.innerHTML = '<p class="hint">Sign in to manage passkeys.</p>'; }
+  }
+};
+Object.assign(Auth, {
+  paintMethods() {
+    const po = !!this.pwOnly;
+    const show = function (id, on) { const el = $(id); if (el) el.style.display = on ? '' : 'none'; };
+    show('btnPasskey', !po && Passkey.ok());
+    show('btnGoogle', !po);
+    show('siOr', !po);
+    show('emailBlock', !po);
+    const pw = $('pwBlock'); if (pw && po) pw.open = true;
+    const sub = $('loginSub');
+    if (sub) sub.textContent = po ? 'Locked after inactivity. Enter your password to continue.' : 'Sign in to manage Artsy Knots. Stay signed in on this device.';
+  },
+  async passkeyIn() {
+    if (!Passkey.ok()) { this.setErr('Passkeys are not available in this browser. Use Google, an email code or your password.'); return; }
+    this.setErr('');
+    try {
+      const o = await Passkey.call('auth-options', {});
+      const r = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: o.options });
+      const v = await Passkey.call('auth-verify', { response: r });
+      const s = await sb.auth.verifyOtp({ token_hash: v.token_hash, type: 'magiclink' });
+      if (s.error) throw s.error;
+      await this.finishSignIn();
+    } catch (e) { this.setErr(Passkey.msg(e)); }
+  },
+  async google() {
+    this.setErr('');
+    try { sessionStorage.setItem('ak.oauth', '1'); } catch (e) {}
+    const r = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+    if (r.error) { try { sessionStorage.removeItem('ak.oauth'); } catch (e) {} this.setErr('Google sign-in is not set up yet. Use a passkey, an email code or your password.'); }
+  },
+  async sendCode() {
+    const email = val('loginEmail').trim();
+    if (!email) { this.setErr('Enter your email first.'); return; }
+    this.setErr('');
+    const r = await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+    if (r.error) { this.setErr('Could not send a code to that email. Check it, or use a passkey or password.'); return; }
+    $('codeStep').style.display = 'flex'; $('loginCode').focus();
+    this.setErr('Code sent. Check your inbox.', true);
+  },
+  async verifyCode() {
+    const r = await sb.auth.verifyOtp({ email: val('loginEmail').trim(), token: val('loginCode').trim(), type: 'email' });
+    if (r.error) { this.setErr('That code did not work. Check it and try again.'); return; }
+    await this.finishSignIn();
+  },
+  async finishSignIn() {
+    const ok = await Splash.run(async function () {
+      const a = await Auth.refresh();
+      if (a) await Promise.all([Store.loadProducts(), Store.loadCategories(), Store.loadAdminData()]);
+      return a;
+    });
+    if (!ok) { await sb.auth.signOut(); this.isAdmin = false; this.setErr('This account does not have studio access.'); return false; }
+    this.pwOnly = false; this.clearFields(); UI.closeAll();
+    Console.populate(); Console.present(); Render.all(); Gallery.apply();
+    Toasts.push('Welcome back ✨'); UI.hap();
+    try {
+      if (Passkey.ok() && !localStorage.getItem('ak.pkAsked')) { localStorage.setItem('ak.pkAsked', '1'); setTimeout(function () { Toasts.push('Tip: add a passkey in Account for one-tap sign-in.'); }, 1800); }
+    } catch (e) {}
+    return true;
+  }
+});
+const _showAuth = Auth.show;
+Auth.show = function (v) { _showAuth.call(Auth, v); Auth.paintMethods(); };
+const _presentConsole = Console.present;
+Console.present = function () { _presentConsole.call(Console); Passkey.renderList(); };
+
+/* ── STUDIO CARE: live storage, reset with 30-day undo, email change, welcome ── */
+const Studio = {
+  fmt(b) { if (b == null) return '—'; if (b < 1024) return b + ' B'; if (b < 1048576) return Math.round(b / 1024) + ' KB'; if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB'; return (b / 1073741824).toFixed(2) + ' GB'; },
+  msg(t, ok) { const el = $('studioMsg'); if (!el) return; el.textContent = t; el.style.display = t ? 'block' : 'none'; el.style.color = ok ? 'var(--ink)' : ''; },
+  async refresh() {
+    const box = $('usageBox'); if (!box || !Auth.isAdmin) return;
+    try {
+      const r = await sb.rpc('studio_usage');
+      if (r.error) throw r.error;
+      const u = r.data;
+      const dbP = Math.min(100, Math.round(u.db_bytes / u.db_limit * 100));
+      const flP = Math.min(100, Math.round(u.file_bytes / u.file_limit * 100));
+      const warn = (dbP >= 80 || flP >= 80) ? '<p class="usage-warn">Storage is getting full. Read the tips below before adding more works.</p>' : '';
+      box.innerHTML = warn
+        + '<div class="usage-row"><span>Database</span><b>' + this.fmt(u.db_bytes) + ' of ' + this.fmt(u.db_limit) + '</b></div><div class="ubar"><i style="width:' + dbP + '%"></i></div>'
+        + '<div class="usage-row"><span>File storage</span><b>' + this.fmt(u.file_bytes) + ' of ' + this.fmt(u.file_limit) + '</b></div><div class="ubar"><i style="width:' + flP + '%"></i></div>'
+        + '<div class="usage-row"><span>Approximate images</span><b>' + u.images + '</b></div>'
+        + '<div class="usage-row"><span>Works on the site</span><b>' + u.works + '</b></div>'
+        + '<div class="usage-tips"><b>Save space</b><br>Compress photos to under 300 KB before upload. Keep videos on YouTube or Vimeo and link them. Remove works you no longer need. Reset clears the site without deleting anything for 30 days, so use it to start again rather than uploading duplicates.</div>';
+      const ub = $('undoBox'); if (ub) ub.style.display = (u.reset && u.reset.active) ? '' : 'none';
+    } catch (e) { box.innerHTML = '<p class="hint">Usage could not be read. It will try again shortly.</p>'; }
+  },
+  async reset() {
+    const word = val('resetWord').trim(), pw = val('resetPw');
+    if (word !== 'RESET') { this.msg('Type RESET in capitals to confirm.'); return; }
+    if (!pw) { this.msg('Enter your password to confirm.'); return; }
+    const who = await sb.auth.getUser();
+    const email = who.data && who.data.user ? who.data.user.email : Auth.email;
+    const c = await sb.auth.signInWithPassword({ email: email, password: pw });
+    if (c.error) { this.msg('That password is not correct. If you have no password yet, use Send reset link on the sign-in screen.'); return; }
+    if (!confirm('Reset the studio? Every work will leave the site. You can undo this for 30 days.')) return;
+    Busy.start('Resetting studio…');
+    const r = await sb.rpc('studio_reset');
+    if (r.error) { Busy.end(); this.msg('Reset failed. Try again.'); return; }
+    Store.state.layout.welcomeAfterReset = true; dSave();
+    $('resetWord').value = ''; $('resetPw').value = '';
+    await Store.loadProducts(); Gallery.apply(); Console.renderProducts(); Console.stats();
+    Busy.end(); this.msg('Studio reset. Undo is available for 30 days.', true); UI.hap([6, 20, 6]);
+    this.refresh();
+  },
+  async undo() {
+    if (!confirm('Bring back every work from the reset? Works you added since then stay.')) return;
+    Busy.start('Restoring works…');
+    const r = await sb.rpc('studio_undo_reset');
+    if (r.error) { Busy.end(); this.msg('Could not restore. Try again.'); return; }
+    await Store.loadProducts(); Gallery.apply(); Console.renderProducts(); Console.stats();
+    Busy.end(); this.msg('Works restored. Newer works were kept.', true); Toasts.push('Works restored.');
+    this.refresh();
+  },
+  async changeEmail() {
+    const e = val('newEmail').trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(e)) { this.msg('Enter a valid new email address.'); return; }
+    const r = await sb.auth.updateUser({ email: e });
+    if (r.error) { this.msg('Could not change the email. ' + r.error.message); return; }
+    $('newEmail').value = '';
+    this.msg('Confirmation sent. Open the link in both inboxes, then sign in again with the new email.', true);
+  },
+  checkWelcome() {
+    if (!Store.state.layout.welcomeAfterReset) return;
+    Auth.refresh().then(function (ok) { if (ok) UI.openOverlay('welcomeOverlay'); });
+  },
+  dismissWelcome() { Store.state.layout.welcomeAfterReset = false; dSave(); UI.closeAll(); UI.hap(); }
+};
+const _presentStudio = Console.present;
+Console.present = function () { _presentStudio.call(Console); Studio.refresh(); };
+setInterval(function () { if ($('console') && $('console').classList.contains('show')) Studio.refresh(); }, 30000);
+
 /* ── REVEAL ── */
 const Reveal = {
   io: null,
@@ -1793,6 +2124,7 @@ function initIntro() {
   const cls = 'intro-out-' + (Store.state.layout.introTransition || 'fade');
   setTimeout(function () { intro.classList.add(cls); }, 5200);
   setTimeout(function () { intro.style.display = 'none'; }, 5900);
+  setTimeout(function () { Studio.checkWelcome(); }, 6200);
 }
 
 /* ── EVENTS ── */
@@ -1835,6 +2167,7 @@ function wireAuth() {
     if (event === 'PASSWORD_RECOVERY') { Auth.recovering = true; Console.openLogin(); Auth.show('newPassView'); }
     if (event === 'SIGNED_OUT') { Auth.isAdmin = false; Auth.email = ''; }
   });
+  if (sessionStorage.getItem('ak.oauth')) { sessionStorage.removeItem('ak.oauth'); sb.auth.getSession().then(function (s) { if (s.data && s.data.session) { Console.openLogin(); Auth.finishSignIn(); } }); }
   if (location.hash.indexOf('type=recovery') >= 0) {
     Auth.recovering = true; Console.openLogin(); Auth.show('newPassView');
   }
@@ -1853,7 +2186,7 @@ async function boot() {
   Reveal.init();
   Physics.initRipple();
   Physics.initNeural();
-  Physics.neuralOn = (Store.state.layout.view !== 'glass');
+  Physics.neuralOn = (Store.state.layout.fx !== false); Dock.sync();
   if (Store.state.layout.bgMode === 'stars') Physics.initStars();
   Guide.init();
   wireAuth();
