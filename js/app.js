@@ -1977,11 +1977,13 @@ Object.assign(Auth, {
   paintMethods() {
     const po = !!this.pwOnly;
     const show = function (id, on) { const el = $(id); if (el) el.style.display = on ? '' : 'none'; };
-    show('btnPasskey', !po && Passkey.ok());
-    show('btnGoogle', !po);
-    show('siOr', !po);
-    show('emailBlock', !po);
-    const pw = $('pwBlock'); if (pw && po) pw.open = true;
+    show('btnPasskey', false);
+    show('btnGoogle', false);
+    show('btnCode', false);
+    show('codeStep', false);
+    show('siOr', false);
+    show('emailBlock', true);
+    const pw = $('pwBlock'); if (pw) pw.open = true;
     const sub = $('loginSub');
     if (sub) sub.textContent = po ? 'Locked after inactivity. Enter your password to continue.' : 'Sign in to manage Artsy Knots. Stay signed in on this device.';
   },
