@@ -474,7 +474,7 @@ body{overscroll-behavior-y:none}
 /* ── v10: site banner and sold notice ── */
 #siteBanner{position:relative;z-index:50;padding:10px 16px;text-align:center;font-size:.9rem;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px -10px var(--accent)}
 .card[data-sold] .act-cart,.card[data-sold] .act-order{pointer-events:auto;cursor:not-allowed;opacity:.5}
-#soldNotice{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:900;width:min(92vw,420px);padding:16px 18px;border-radius:18px;background:var(--glass-fill-strong);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-stroke);box-shadow:var(--glass-shadow);color:var(--ink);display:flex;flex-direction:column;gap:6px;transition:opacity .35s,transform .35s}
+#soldNotice{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:1200;width:min(92vw,420px);padding:16px 18px;border-radius:18px;background:var(--glass-fill-strong);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-stroke);box-shadow:var(--glass-shadow);color:var(--ink);display:flex;flex-direction:column;gap:6px;transition:opacity .35s,transform .35s}
 #soldNotice.show{opacity:1;transform:translate(-50%,0)}
 #soldNotice b{font-size:1rem;color:#dc2626}
 #soldNotice span{font-size:.88rem;color:var(--ink-soft);line-height:1.5}
@@ -494,3 +494,29 @@ button *{pointer-events:none}
 .si-primary{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -5px 0 rgba(0,0,0,.2),0 16px 30px -12px var(--accent)}
 .si-pw summary{display:none}
 .si-pw{padding:14px}
+
+/* ── v12: sold works on the product page ── */
+.act.is-sold{opacity:.55;color:var(--ink-soft);cursor:not-allowed;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0) 60%),var(--glass-fill)}
+
+/* ── v13: whole image shown (never cropped), clear guide colour, banner and reset polish ── */
+.card .ph img,.d-media img,#dMedia img{object-fit:contain!important;width:100%!important;height:100%!important;max-height:none;background:linear-gradient(135deg,#f3eefc,#e9e1fb)}
+.guide-panel{background:linear-gradient(180deg,#fbf9ff 0%,#f1ebfd 100%)!important}
+.guide-panel .guide-title{color:#4c1d95!important}
+.guide-panel .guide-results > *{background:#ffffff;border:1px solid rgba(124,58,237,.18);border-radius:18px}
+#qrPngBox img{background:#fff}
+
+/* ── v13: toast messages sit at the top and never block a tap ── */
+.toast-wrap{top:calc(env(safe-area-inset-top,0px) + 14px);bottom:auto;pointer-events:none}
+.toast{pointer-events:none}
+
+/* ── v13: the guide button and speech bubble step aside whenever a window is open ── */
+body:has(.overlay.show) .guide-fab,body:has(.overlay.show) .guide-hint,
+body:has(#cart.show) .guide-fab,body:has(#cart.show) .guide-hint,
+body:has(#console.show) .guide-fab,body:has(#console.show) .guide-hint,
+body:has(.guide-panel.show) .guide-hint{opacity:0!important;pointer-events:none!important;visibility:hidden}
+
+/* ── v13: the checkout Send button stays fully inside its window on every phone ── */
+#coSend{position:relative}
+
+/* ── v14: every window scrolls on a small phone, so its Close and action buttons are always reachable ── */
+.overlay .modal{max-height:calc(100dvh - 24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
