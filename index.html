@@ -138,6 +138,7 @@
     <p class="msub" id="qrInfo"></p>
     <div class="qr-box" id="qrBox"></div>
     <p class="msub" style="margin:12px 0 4px">Scan with your phone camera to open the studio.</p>
+    <div id="qrPngBox" style="display:none;margin:0 0 12px"></div>
     <button class="cbtn cbtn-primary" onclick="Dock.shareQr()">Share QR code</button>
     <a class="cbtn cbtn-primary" id="qrOpen" href="#" style="display:block;text-decoration:none;text-align:center">Open the site</a>
     <button class="cbtn cbtn-ghost" onclick="UI.closeAll()">Close</button>
@@ -315,17 +316,6 @@
 
     <div class="cpanel" data-panel="access">
       <div class="status-banner s-live">Signed in as <b id="accEmail"></b></div>
-      <div class="field"><label>Change email <span class="hint">Confirm in both inboxes. Your sign-in moves to the new address once confirmed.</span></label>
-        <input class="input" id="newEmail" type="email" autocomplete="email" placeholder="new@email.com">
-        <button class="cbtn cbtn-primary" onclick="Studio.changeEmail()">Send confirmation</button></div>
-      <div class="field"><label>Storage <span class="hint">Live. Refreshes every 30 seconds while this panel is open.</span></label>
-        <div id="usageBox"><p class="hint">Reading usage…</p></div></div>
-      <div class="field danger-zone"><label>Reset studio <span class="hint">Hides every work from the site so you can start again. Nothing is lost for 30 days. Type RESET and enter your password to confirm.</span></label>
-        <input class="input" id="resetWord" placeholder="Type RESET" autocomplete="off" autocapitalize="characters">
-        <input class="input" id="resetPw" type="password" placeholder="Your password" autocomplete="current-password">
-        <button class="cbtn cbtn-danger" onclick="Studio.reset()">Reset studio</button>
-        <div id="undoBox" style="display:none"><p class="hint">A reset is active. You have 30 days to undo it.</p><button class="cbtn cbtn-primary" onclick="Studio.undo()">Restore everything</button></div>
-        <p class="modal-err" id="studioMsg" role="status" style="display:none"></p></div>
       <div class="field"><label>Passkeys on your account <span class="hint">Works on any device where the passkey syncs (iCloud Keychain or Google Password Manager).</span></label><div id="pkList" class="pk-list"><p class="hint">Sign in to manage passkeys.</p></div><button class="cbtn cbtn-primary" onclick="Passkey.addThisDevice()">Add a passkey to this device</button></div>
       <div class="toggle-row"><div class="tlabel">Studio guide<small>Show the help button for all visitors</small></div><div class="switch" id="sw_guide" onclick="Guide.toggle()"></div></div>
       <div class="field"><label>Change password <span class="hint">At least 10 characters.</span></label>
@@ -337,6 +327,17 @@
       <div class="modal-err" id="accErr" role="alert" style="display:none"></div>
       <button class="cbtn cbtn-primary" onclick="Auth.changePassword()">Save new password</button>
       <button class="cbtn cbtn-danger" onclick="Auth.signOut()">Sign out of studio</button>
+      <div class="field"><label>Change email <span class="hint">Confirm in both inboxes. Your sign-in moves to the new address once confirmed.</span></label>
+        <input class="input" id="newEmail" type="email" autocomplete="email" placeholder="new@email.com">
+        <button class="cbtn cbtn-primary" onclick="Studio.changeEmail()">Send confirmation</button></div>
+      <div class="field"><label>Storage <span class="hint">Live. Refreshes every 30 seconds while this panel is open.</span></label>
+        <div id="usageBox"><p class="hint">Reading usage…</p></div></div>
+      <div class="field danger-zone"><label>Reset studio <span class="hint">Hides every work from the site so you can start again. Nothing is lost for 30 days. Type RESET and enter your password to confirm.</span></label>
+        <input class="input" id="resetWord" placeholder="Type RESET" autocomplete="off" autocapitalize="characters">
+        <div class="pw-wrap"><input class="input" id="resetPw" type="password" placeholder="Your password" autocomplete="current-password"><button type="button" class="pw-eye" onclick="togglePw(this)" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <button class="cbtn cbtn-danger" onclick="Studio.reset()">Reset studio</button>
+        <div id="undoBox" style="display:none"><p class="hint">A reset is active. You have 30 days to undo it.</p><button class="cbtn cbtn-primary" onclick="Studio.undo()">Restore everything</button></div>
+        <p class="modal-err" id="studioMsg" role="status" style="display:none"></p></div>
     </div>
   </div>
 </aside>
@@ -423,16 +424,16 @@
 
     <div id="loginView">
       <div class="si-methods">
-        <button class="si-btn si-primary" id="btnPasskey" onclick="Auth.passkeyIn()">
+        <button class="si-btn si-primary" id="btnPasskey" style="display:none" onclick="Auth.passkeyIn()">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
           <span><b>Sign in with a passkey</b><small>Fingerprint or face. No password.</small></span>
         </button>
-        <button class="si-btn" id="btnGoogle" onclick="Auth.google()"><span class="si-g" aria-hidden="true">G</span><span>Continue with Google</span></button>
-        <div class="si-or" id="siOr"><span>or</span></div>
+        <button class="si-btn" id="btnGoogle" style="display:none" onclick="Auth.google()"><span class="si-g" aria-hidden="true">G</span><span>Continue with Google</span></button>
+        <div class="si-or" id="siOr" style="display:none"><span>or</span></div>
         <div class="si-email" id="emailBlock">
           <label for="loginEmail">Email</label>
           <input class="input" id="loginEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')Auth.sendCode()">
-          <button class="si-btn" id="btnCode" onclick="Auth.sendCode()">Email me a 6-digit code</button>
+          <button class="si-btn" id="btnCode" style="display:none" onclick="Auth.sendCode()">Email me a 6-digit code</button>
           <div id="codeStep" style="display:none">
             <input class="input" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" onkeydown="if(event.key==='Enter')Auth.verifyCode()">
             <button class="si-btn si-primary" onclick="Auth.verifyCode()">Confirm code</button>
@@ -562,9 +563,9 @@
 <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script src="js/vendor/qrcode.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@13.1.0/dist/bundle/index.umd.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<script src="js/vendor/xlsx.full.min.js" defer></script>
 <script src="js/app.js" defer></script>
 </body>
 </html>
