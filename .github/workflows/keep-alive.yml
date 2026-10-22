@@ -1,7 +1,6 @@
 name: Keep site and database awake
 
 on:
-  push:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -19,4 +18,4 @@ jobs:
       - name: Check the public site is up
         run: |
           curl -fsS --max-time 30 -o /dev/null \
-            "https://gitongalewis190-alt.github.io/Artsy_Knots/"
+            "https://gitongalewis190-alt.github.io/artsy_knots/"
