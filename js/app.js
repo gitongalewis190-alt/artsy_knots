@@ -649,7 +649,7 @@ const Gallery = {
         + Gallery.cmtBtn(p)
         + (isVid
           ? '<button class="act act-cart" style="flex:1" onclick="event.stopPropagation();Detail.open(\'' + p.id + '\')">Watch</button>'
-          : '<button class="act act-cart" style="flex:1" onclick="event.stopPropagation();Cart.add(\'' + p.id + '\')">Add to cart</button><button class="act act-order" style="flex:1" onclick="event.stopPropagation();Checkout.orderNow(\'' + p.id + '\')">Order now</button>')
+          : '<button class="act act-cart" style="flex:1" onclick="event.stopPropagation();Cart.add(\'' + p.id + '\')">' + (p.tag === 'sold' ? 'Sold' : 'Add to cart') + '</button><button class="act act-order" style="flex:1" onclick="event.stopPropagation();Checkout.orderNow(\'' + p.id + '\')">Order now</button>')
         + '</div>';
       return '<article class="card" style="--fd:' + fd + '"' + (p.tag === 'sold' ? ' data-sold="1"' : '') + ' onclick="Detail.open(\'' + p.id + '\')"><div class="ph">' + media + play + Render.tag(p) + '<span class="like-pill">' + ic('heart', 14, isLiked) + ' <span id="lk-' + p.id + '">' + p.likes + '</span></span></div>' + body + actions + Gallery.cc(p) + '</article>';
     }).join('');
@@ -2049,7 +2049,7 @@ const Studio = {
     try {
       const r = await sb.rpc('studio_usage');
       if (r.error) throw r.error;
-      const u = r.data;
+      const u = r.data; Studio.last = u;
       const dbP = Math.min(100, Math.round(u.db_bytes / u.db_limit * 100));
       const flP = Math.min(100, Math.round(u.file_bytes / u.file_limit * 100));
       const warn = (dbP >= 80 || flP >= 80) ? '<p class="usage-warn">Storage is getting full. Read the tips below before adding more works.</p>' : '';
@@ -2124,7 +2124,7 @@ const SiteBanner = {
   }
 };
 Object.assign(Edit, {
-  toggleBanner() { const b = Store.state.layout.banner || {}; b.on = !b.on; Store.state.layout.banner = b; SiteBanner.sync(); dSave(); UI.hap(); },
+  toggleBanner() { const b = Store.state.layout.banner || {}; if (!b.on && !String(b.text || '').trim()) { Toasts.push('Type your banner message first, then switch it on.'); return; } b.on = !b.on; Store.state.layout.banner = b; SiteBanner.sync(); dSave(); UI.hap(); },
   setBanner() { const b = Store.state.layout.banner || {}; b.text = val('f_banner').trim().slice(0, 200); Store.state.layout.banner = b; SiteBanner.sync(); dSave(); }
 });
 const _dockSyncBanner = Dock.sync;
@@ -2189,82 +2189,148 @@ Object.assign(Studio, {
   }
 });
 
+/* ── DELIVERY (share sheet first, download fallback) ── */
+const Deliver = {
+  file(blob, name, type) { return new File([blob], name, { type: type }); },
+  download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+};
+
 /* ── EXCEL RECORD (editable workbook, readable by people) ── */
 Object.assign(Store, {
-  async exportWorkbook() {
-    if (typeof XLSX === 'undefined') { Toasts.push('Excel export is still loading. Try again in a moment.'); return; }
-    Busy.start('Preparing your record…');
-    let usage = null; try { const u = await sb.rpc('studio_usage'); usage = u.data; } catch (e) {}
+  exportWorkbook() {
+    if (typeof XLSX === 'undefined') { Toasts.push('The Excel tool has not loaded. Refresh the page and try again.'); return; }
     const now = new Date();
-    const fmt = function (t) { return t ? new Date(t).toLocaleString('en-KE') : ''; };
-    const works = Store.products.filter(function (p) { return p.type !== 'video'; });
-    const videos = Store.products.filter(function (p) { return p.type === 'video'; });
-    const comments = Store.products.reduce(function (a, p) { return a + (p.comments || []).length; }, 0);
-    const likes = Store.products.reduce(function (a, p) { return a + (p.likes || 0); }, 0);
-    const wb = XLSX.utils.book_new();
-    const add = function (name, rows, widths) { const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = widths.map(function (w) { return { wch: w }; }); XLSX.utils.book_append_sheet(wb, ws, name); };
-    const summary = [
-      ['Artsy Knots: Studio Record'],
-      ['Studio', Store.state.brand.name],
-      ['Exported on', now.toLocaleString('en-KE')],
-      [],
-      ['Measure', 'Value'],
-      ['Works on the site', works.length],
-      ['Videos', videos.length],
-      ['Orders', Store.orders.length],
-      ['Commissions', Store.commissions.length],
-      ['Comments', comments],
-      ['Likes', likes]
-    ];
-    if (usage) summary.push(['Database used (bytes)', usage.db_bytes], ['File storage used (bytes)', usage.file_bytes], ['Approximate images', usage.images]);
-    add('Summary', summary, [28, 24]);
-    add('Works', [['Title', 'Type', 'Category', 'Label', 'Price (KES)', 'Dimensions', 'Likes', 'Views', 'Comments', 'Images', 'Created', 'Description', 'First image link']]
-      .concat(Store.products.map(function (p) { return [p.title, p.type || 'artwork', Render.label(p.category), p.tag || '', p.price, p.dims || '', p.likes || 0, p.views || 0, (p.comments || []).length, (p.images || []).length, fmt(p.createdAt), p.desc || '', (p.images || [])[0] || '']; })),
-      [30, 10, 18, 12, 14, 16, 8, 8, 10, 8, 20, 50, 40]);
-    add('Orders', [['Order', 'Date', 'Status', 'Method', 'Customer', 'Address', 'Phone', 'Items', 'Total (KES)']]
-      .concat(Store.orders.map(function (x) { return [x.id, fmt(x.createdAt), x.status, x.method, x.name, x.address, x.phone, x.items.map(function (i) { return i.title + ' x' + i.qty; }).join('; '), x.total]; })),
-      [14, 20, 12, 12, 22, 30, 16, 50, 14]);
-    add('Commissions', [['Name', 'Contact', 'Method', 'Piece', 'Size', 'Colours', 'Place', 'Mood', 'Budget', 'Needed by', 'Reference', 'Details', 'Status', 'Received']]
-      .concat(Store.commissions.map(function (x) { return [x.name, x.contact, x.method, x.piece, x.size, x.colours, x.place, x.mood, x.budget, x.needed, x.reference, x.details, x.status || '', fmt(x.createdAt)]; })),
-      [20, 18, 12, 18, 12, 16, 16, 16, 14, 14, 30, 40, 12, 20]);
-    add('Comments', [['Work', 'Name', 'Comment', 'Date']]
-      .concat(Store.products.reduce(function (a, p) { (p.comments || []).forEach(function (c) { a.push([p.title, c.name || 'Anonymous', c.text || '', fmt(c.ts)]); }); return a; }, [])),
-      [30, 20, 60, 20]);
-    XLSX.writeFile(wb, 'artsy-knots-record-' + now.toISOString().slice(0, 10) + '.xlsx');
-    Busy.end(); Toasts.push('Record downloaded'); UI.hap();
+    const name = 'artsy-knots-record-' + now.toISOString().slice(0, 10) + '.xlsx';
+    Busy.start('Preparing your record…');
+    try {
+      const fmt = function (t) { return t ? new Date(t).toLocaleString('en-KE') : ''; };
+      const txt = function (v) { return v == null ? '' : String(v); };
+      const works = Store.products.filter(function (p) { return p.type !== 'video'; });
+      const videos = Store.products.filter(function (p) { return p.type === 'video'; });
+      const comments = Store.products.reduce(function (a, p) { return a + (p.comments || []).length; }, 0);
+      const likes = Store.products.reduce(function (a, p) { return a + (Number(p.likes) || 0); }, 0);
+      const usage = (typeof Studio !== 'undefined' && Studio.last) ? Studio.last : null;
+      const wb = XLSX.utils.book_new();
+      const add = function (sheet, rows, widths) {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = widths.map(function (w) { return { wch: w }; });
+        XLSX.utils.book_append_sheet(wb, ws, sheet);
+      };
+      const summary = [
+        ['Artsy Knots: Studio Record'],
+        ['Studio', txt(Store.state.brand && Store.state.brand.name) || 'Artsy Knots'],
+        ['Exported on', now.toLocaleString('en-KE')],
+        [],
+        ['Measure', 'Value'],
+        ['Works on the site', works.length],
+        ['Videos', videos.length],
+        ['Orders', Store.orders.length],
+        ['Commissions', Store.commissions.length],
+        ['Comments', comments],
+        ['Likes', likes]
+      ];
+      if (usage) summary.push(['Database used (bytes)', usage.db_bytes], ['File storage used (bytes)', usage.file_bytes], ['Approximate images', usage.images]);
+      add('Summary', summary, [28, 24]);
+      add('Works', [['Title', 'Type', 'Category', 'Label', 'Price (KES)', 'Dimensions', 'Likes', 'Views', 'Comments', 'Images', 'Created', 'Description', 'First image link']]
+        .concat(Store.products.map(function (p) {
+          return [txt(p.title), txt(p.type || 'artwork'), txt(Render.label(p.category)), txt(p.tag), Number(p.price) || 0, txt(p.dims), Number(p.likes) || 0, Number(p.views) || 0, (p.comments || []).length, (p.images || []).length, fmt(p.createdAt), txt(p.desc), txt((p.images || [])[0])];
+        })), [30, 10, 18, 12, 14, 16, 8, 8, 10, 8, 20, 50, 40]);
+      add('Orders', [['Order', 'Date', 'Status', 'Method', 'Customer', 'Address', 'Phone', 'Items', 'Total (KES)']]
+        .concat(Store.orders.map(function (x) {
+          const items = Array.isArray(x.items) ? x.items : [];
+          return [txt(x.id), fmt(x.createdAt), txt(x.status), txt(x.method), txt(x.name), txt(x.address), txt(x.phone), items.map(function (i) { return txt(i.title) + ' x' + (i.qty || 1); }).join('; '), Number(x.total) || 0];
+        })), [14, 20, 12, 12, 22, 30, 16, 50, 14]);
+      add('Commissions', [['Name', 'Contact', 'Method', 'Piece', 'Size', 'Colours', 'Place', 'Mood', 'Budget', 'Needed by', 'Reference', 'Details', 'Status', 'Received']]
+        .concat(Store.commissions.map(function (x) {
+          return [txt(x.name), txt(x.contact), txt(x.method), txt(x.piece), txt(x.size), txt(x.colours), txt(x.place), txt(x.mood), txt(x.budget), txt(x.needed), txt(x.reference), txt(x.details), txt(x.status), fmt(x.createdAt)];
+        })), [20, 18, 12, 18, 12, 16, 16, 16, 14, 14, 30, 40, 12, 20]);
+      add('Comments', [['Work', 'Name', 'Comment', 'Date']]
+        .concat(Store.products.reduce(function (a, p) { (p.comments || []).forEach(function (c) { a.push([txt(p.title), txt(c.name) || 'Anonymous', txt(c.text), fmt(c.ts)]); }); return a; }, [])),
+        [30, 20, 60, 20]);
+      const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const blob = new Blob([data], { type: type });
+      Busy.end();
+      const file = Deliver.file(blob, name, type);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Artsy Knots record' }).catch(function (err) { if (!err || err.name !== 'AbortError') Deliver.download(blob, name); });
+      } else { Deliver.download(blob, name); }
+      Toasts.push('Record ready');
+    } catch (err) {
+      Busy.end();
+      Toasts.push('The record could not be built. ' + (err && err.message ? err.message : 'Try again.'));
+    }
   }
 });
 
-/* ── SHARE THE QR CODE (image + link) ── */
+/* ── SHARE THE QR CODE: picture is prepared when the popup opens, so Share acts on the tap ── */
 Object.assign(Dock, {
-  async shareQr() {
+  _png: null, _png_url: null,
+  prepareQr() {
     const svg = document.querySelector('#qrBox svg');
-    if (!svg) { Toasts.push('The QR code is not ready yet.'); return; }
-    const url = location.origin + location.pathname;
-    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
-    const src = URL.createObjectURL(blob);
+    if (!svg) return;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', '720'); clone.setAttribute('height', '720');
+    const src = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' }));
     const img = new Image();
-    try { await new Promise(function (res, rej) { img.onload = res; img.onerror = rej; img.src = src; }); }
-    catch (e) { URL.revokeObjectURL(src); Toasts.push('The QR code could not be prepared. Try again.'); return; }
-    const cv = document.createElement('canvas'); cv.width = 800; cv.height = 800;
-    const cx = cv.getContext('2d'); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, 800, 800); cx.drawImage(img, 40, 40, 720, 720);
-    URL.revokeObjectURL(src);
-    const png = await new Promise(function (res) { cv.toBlob(res, 'image/png'); });
-    const file = new File([png], 'artsy-knots-qr.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'Artsy Knots', text: 'Explore Artsy Knots', url: url }); return; }
-      catch (e) { if (e && e.name === 'AbortError') return; }
-    }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(png); a.download = 'artsy-knots-qr.png'; a.click();
-    try { await navigator.clipboard.writeText(url); Toasts.push('QR image saved. Site link copied.'); }
-    catch (e) { Toasts.push('QR image saved to your downloads.'); }
+    img.onload = function () {
+      const cv = document.createElement('canvas'); cv.width = 800; cv.height = 800;
+      const cx = cv.getContext('2d'); if (cx) { cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, 800, 800); cx.drawImage(img, 40, 40, 720, 720); }
+      URL.revokeObjectURL(src);
+      cv.toBlob(function (png) { if (png) { Dock._png = png; } }, 'image/png');
+    };
+    img.onerror = function () { URL.revokeObjectURL(src); };
+    img.src = src;
+  },
+  shareQr() {
+    const url = location.origin + location.pathname;
+    if (!this._png) { this.prepareQr(); Toasts.push('Preparing the QR picture. Tap Share again in a moment.'); return; }
+    const file = new File([this._png], 'artsy-knots-qr.png', { type: 'image/png' });
+    const fallback = function (err) { if (!err || err.name !== 'AbortError') Dock.showQrPicture(); };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'Artsy Knots', text: 'Explore Artsy Knots', url: url }).catch(fallback); return; }
+    if (navigator.share) { navigator.share({ title: 'Artsy Knots', text: 'Explore Artsy Knots', url: url }).catch(fallback); return; }
+    this.showQrPicture();
+  },
+  showQrPicture() {
+    if (!this._png) return;
+    const box = $('qrPngBox');
+    if (this._png_url) URL.revokeObjectURL(this._png_url);
+    this._png_url = URL.createObjectURL(this._png);
+    box.innerHTML = '<img alt="Artsy Knots QR code" src="' + this._png_url + '" style="width:100%;border-radius:14px;display:block"><p class="msub" style="margin:8px 0 0">Press and hold the picture to save or share it.</p>';
+    box.style.display = 'block';
   }
 });
+const _openQrBase = Dock.openQr;
+Dock.openQr = function () { _openQrBase.call(Dock); $('qrPngBox').style.display = 'none'; $('qrPngBox').innerHTML = ''; setTimeout(function () { Dock.prepareQr(); }, 60); };
 
 /* ── SIGN-IN: password form only, always open ── */
 const _paintMethodsPw = Auth.paintMethods;
 Auth.paintMethods = function () { _paintMethodsPw.call(Auth); const pw = $('pwBlock'); if (pw) pw.open = true; };
 setTimeout(function () { const pk = $('pkList'); if (pk && pk.closest('.field')) pk.closest('.field').style.display = 'none'; }, 1200);
+
+/* ── SOLD WORKS: product page and checkout ── */
+const _detailOpenSold = Detail.open;
+Detail.open = function (id) {
+  _detailOpenSold.call(Detail, id);
+  const p = Store.products.find(function (x) { return x.id === id; });
+  const b = $('dCart'); if (!b) return;
+  if (!b.dataset.label) b.dataset.label = b.textContent;
+  if (p && p.tag === 'sold') { b.classList.add('is-sold'); b.setAttribute('aria-disabled', 'true'); b.textContent = 'Sold'; }
+  else { b.classList.remove('is-sold'); b.removeAttribute('aria-disabled'); b.textContent = b.dataset.label; }
+};
+const _checkoutOpenSold = Checkout.open;
+Checkout.open = function () {
+  const before = Cart.items.length;
+  Cart.items = Cart.items.filter(function (i) { const p = Store.products.find(function (x) { return x.id === i.id; }); return !(p && p.tag === 'sold'); });
+  if (Cart.items.length !== before) { Cart.save(); Cart.render(); SoldNotice.show(); }
+  if (!Cart.items.length) { Toasts.push('Your cart has no available pieces. Add one to continue.'); return; }
+  return _checkoutOpenSold.call(Checkout);
+};
 
 /* ── REVEAL ── */
 const Reveal = {
