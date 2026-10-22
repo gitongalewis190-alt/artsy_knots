@@ -1,0 +1,22 @@
+name: Keep site and database awake
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the database
+        run: |
+          curl -fsS --max-time 30 \
+            "https://aqfmoiehacstnpcskqlx.supabase.co/rest/v1/products?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            -o /dev/null
+      - name: Check the public site is up
+        run: |
+          curl -fsS --max-time 30 -o /dev/null \
+            "https://gitongalewis190-alt.github.io/Artsy_Knots/"
