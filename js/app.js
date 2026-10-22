@@ -187,7 +187,7 @@ function linkOpen(url) {
 /* ── DEFAULTS (studio settings only; no sample works) ── */
 const DEFAULTS = {
   brand: { name: 'Artsy Knots', tag: 'handmade studio', logoUrl: '', logoLetter: 'A', footMark: 'Artsy Knots' },
-  theme: { palette: 'amethyst', dark: false, accent: '#8b5cf6', accent2: '#6d28d9', bg1: '#f1ebff', bg2: '#e0d2ff', bg3: '#faf7ff' },
+  theme: { palette: 'obsidian', dark: true, accent: '#a855f7', accent2: '#6d28d9', bg1: '#0c0617', bg2: '#160a2b', bg3: '#07040f' },
   layout: { fx: true, locOn: true, locLabel: 'Nairobi, Kenya', locUrl: '', guideOn: true, view: 'glass', density: 'standard', shape: 'default', haptics: true, bgMode: 'caustic', introTransition: 'fade' },
   copy: {
     heroEyebrow: 'Handmade in Nairobi · one of a kind',
