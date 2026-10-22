@@ -1,6 +1,7 @@
 name: Keep site and database awake
 
 on:
+  push:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -13,8 +14,7 @@ jobs:
         run: |
           curl -fsS --max-time 30 \
             "https://aqfmoiehacstnpcskqlx.supabase.co/rest/v1/products?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+            -H "apikey: sb_publishable_GYPOvggow6kpE0d5Dm9xwQ_9I2L7Rgj" \
             -o /dev/null
       - name: Check the public site is up
         run: |
