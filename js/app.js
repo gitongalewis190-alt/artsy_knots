@@ -641,9 +641,10 @@ const Gallery = {
       const media = thumb ? '<img src="' + esc(thumb) + '" alt="' + esc(p.title) + '" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">' : '<span class="glyph">' + Render.glyph(isVid ? 'video' : p.category) + '</span>';
       const play = isVid ? '<div class="play-badge"><div class="play-circle">' + ic('play', 20, true) + '</div></div>' + (p.duration ? '<span class="dur-badge">' + esc(p.duration) + '</span>' : '') : '';
       const fd = (5 + (i % 5) * 0.9).toFixed(1) + 's';
+      const made = p.createdAt ? '<div class="made">' + ic('clock', 12) + ' Added ' + esc(new Date(p.createdAt).toLocaleString([], { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</div>' : '';
       const body = isVid
-        ? '<div class="body"><div class="vid-meta-row"><span class="vid-provider">' + esc(Media.providerLabel(p.video)) + '</span>' + (p.vdate ? '<span class="vid-date">' + new Date(p.vdate).toLocaleDateString() + '</span>' : '') + '</div><h3 class="vid-title">' + esc(p.title) + '</h3><p class="vid-desc">' + esc(p.desc) + '</p><div class="vid-stats"><span>' + ic('heart', 13) + ' ' + p.likes + '</span><span>' + ic('eye', 13) + ' ' + p.views + '</span>' + (p.duration ? '<span>' + ic('clock', 13) + ' ' + esc(p.duration) + '</span>' : '') + '</div></div>'
-        : '<div class="body"><h3>' + esc(p.title) + '</h3><p class="desc">' + esc(p.desc) + '</p>' + (p.dims ? '<div class="dims">' + esc(p.dims) + '</div>' : '') + '<div class="meta"><span class="price">' + Render.money(p.price) + '</span><span class="tag">' + esc(Render.label(p.category)) + '</span></div></div>';
+        ? '<div class="body"><div class="vid-meta-row"><span class="vid-provider">' + esc(Media.providerLabel(p.video)) + '</span>' + (p.vdate ? '<span class="vid-date">' + new Date(p.vdate).toLocaleDateString() + '</span>' : '') + '</div><h3 class="vid-title">' + esc(p.title) + '</h3><p class="vid-desc">' + esc(p.desc) + '</p><div class="vid-stats"><span>' + ic('heart', 13) + ' ' + p.likes + '</span><span>' + ic('eye', 13) + ' ' + p.views + '</span>' + (p.duration ? '<span>' + ic('clock', 13) + ' ' + esc(p.duration) + '</span>' : '') + '</div>' + made + '</div>'
+        : '<div class="body"><h3>' + esc(p.title) + '</h3><p class="desc">' + esc(p.desc) + '</p>' + (p.dims ? '<div class="dims">' + esc(p.dims) + '</div>' : '') + made + '<div class="meta"><span class="price">' + Render.money(p.price) + '</span><span class="tag">' + esc(Render.label(p.category)) + '</span></div></div>';
       const actions = '<div class="actions" style="padding:0 22px 18px">'
         + '<button class="act act-like act-mini' + (isLiked ? ' liked' : '') + '" id="lb-' + p.id + '" onclick="event.stopPropagation();Gallery.like(\'' + p.id + '\')" aria-label="Like">' + ic('heart', 16, isLiked) + '</button>'
         + Gallery.cmtBtn(p)
@@ -1345,7 +1346,7 @@ const Editor = {
       const row = toRow(base);
       const r = this.eid
         ? await sb.from('products').update(row).eq('id', this.eid)
-        : await sb.from('products').insert(row);
+        : await sb.from('products').insert(Object.assign({ created_at: new Date().toISOString() }, row));
       if (r.error) throw r.error;
       await Store.loadProducts();
       Gallery.apply(); Console.renderProducts(); Console.stats();
