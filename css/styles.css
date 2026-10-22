@@ -499,10 +499,10 @@ button *{pointer-events:none}
 .act.is-sold{opacity:.55;color:var(--ink-soft);cursor:not-allowed;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0) 60%),var(--glass-fill)}
 
 /* ── v13: whole image shown (never cropped), clear guide colour, banner and reset polish ── */
-.card .ph img,.d-media img,#dMedia img{object-fit:contain!important;width:100%!important;height:100%!important;max-height:none;background:linear-gradient(135deg,#f3eefc,#e9e1fb)}
-.guide-panel{background:linear-gradient(180deg,#fbf9ff 0%,#f1ebfd 100%)!important}
-.guide-panel .guide-title{color:#4c1d95!important}
-.guide-panel .guide-results > *{background:#ffffff;border:1px solid rgba(124,58,237,.18);border-radius:18px}
+.card .ph img,.d-media img,#dMedia img{object-fit:contain!important;width:100%!important;height:100%!important;max-height:none;background:transparent}
+.guide-panel{background:var(--bg-3)!important}
+.guide-panel .guide-title{color:var(--ink)!important}
+.guide-panel .guide-results > *{background:var(--glass-fill-strong);border:1px solid var(--glass-stroke);border-radius:18px;color:var(--ink)}
 #qrPngBox img{background:#fff}
 
 /* ── v13: toast messages sit at the top and never block a tap ── */
@@ -520,3 +520,10 @@ body:has(.guide-panel.show) .guide-hint{opacity:0!important;pointer-events:none!
 
 /* ── v14: every window scrolls on a small phone, so its Close and action buttons are always reachable ── */
 .overlay .modal{max-height:calc(100dvh - 24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* ── v15: product photo shows whole at its own proportions on the gallery cards (no fixed-height crop box) ── */
+.card .ph{height:auto!important;min-height:120px;max-height:520px}
+.card .ph img{height:auto!important;max-height:520px;object-fit:contain!important}
+
+/* ── v16: creation date and time shown on each work's banner ── */
+.made{display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--ink-soft);margin-bottom:10px}
