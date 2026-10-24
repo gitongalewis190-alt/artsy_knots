@@ -527,3 +527,43 @@ body:has(.guide-panel.show) .guide-hint{opacity:0!important;pointer-events:none!
 
 /* ── v16: creation date and time shown on each work's banner ── */
 .made{display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--ink-soft);margin-bottom:10px}
+
+/* ── v17: price looks (style, shape, colour, currency code, sale strike-through) ── */
+.price{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dprice{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pz{--pc:var(--accent);display:inline-flex;align-items:center;font-family:var(--serif);font-weight:700;font-size:1.22rem;line-height:1.2;color:var(--pc);padding:5px 13px;white-space:nowrap}
+.pz[data-sh="pill"]{border-radius:999px}
+.pz[data-sh="rounded"]{border-radius:12px}
+.pz[data-sh="square"]{border-radius:0}
+.pz[data-sh="tag"]{clip-path:polygon(12px 0,100% 0,100% 100%,12px 100%,0 50%);padding-left:22px}
+.pz[data-ps="chip"]{background:var(--pc);color:#fff;box-shadow:0 8px 18px -8px var(--pc)}
+.pz[data-ps="outline"]{border:1.5px solid var(--pc);background:transparent}
+.pz[data-ps="gradient"]{background:linear-gradient(135deg,var(--pc),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;padding-left:2px;padding-right:2px}
+.pz[data-ps="mono"]{font-family:var(--display);font-weight:600;font-size:1.05rem;letter-spacing:.02em}
+.pz[data-ps="italic"]{font-style:italic;font-weight:500}
+.pz[data-ps="glow"]{text-shadow:0 0 14px var(--pc),0 0 4px var(--pc)}
+.pz-was{font-family:var(--sans);font-size:.84rem;color:var(--ink-soft);text-decoration:line-through;text-decoration-thickness:1.5px;font-weight:500}
+.pz-off{font-family:var(--sans);font-size:.68rem;font-weight:800;letter-spacing:.06em;color:#fff;background:linear-gradient(135deg,#f43f5e,#fb923c);border-radius:999px;padding:3px 9px}
+
+/* ── v17: card borders ── */
+body[data-border="hairline"] .card,body[data-border="hairline"] .modal{border:1px solid color-mix(in srgb,var(--ink) 30%,transparent)}
+body[data-border="none"] .card,body[data-border="none"] .modal{border-color:transparent}
+body[data-border="glow"] .card,body[data-border="glow"] .modal{box-shadow:var(--glass-shadow),0 0 0 1px var(--accent),0 0 26px -6px var(--accent)}
+body[data-border="ring"] .card,body[data-border="ring"] .modal{border:2px solid var(--accent);box-shadow:var(--glass-shadow),0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+body[data-border="dashed"] .card,body[data-border="dashed"] .modal{border:2px dashed var(--accent)}
+body[data-border="double"] .card,body[data-border="double"] .modal{border:4px double var(--accent-2)}
+body[data-border="gradient"] .card,body[data-border="gradient"] .modal{border:2px solid transparent;background:linear-gradient(var(--glass-fill),var(--glass-fill)) padding-box,linear-gradient(135deg,var(--accent),var(--accent-2)) border-box}
+
+/* ── v17: card surfaces ── */
+body[data-surface="solid"] .card{background:color-mix(in srgb,var(--bg-2) 94%,transparent);backdrop-filter:none;-webkit-backdrop-filter:none}
+body[data-surface="tint"] .card{background:color-mix(in srgb,var(--accent) 18%,var(--glass-fill))}
+body[data-surface="gradient"] .card{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 42%,transparent),color-mix(in srgb,var(--accent-2) 30%,transparent))}
+
+/* ── v17: window glass depth (banners, guide, cart, console) ── */
+.overlay{background:rgba(3,5,15,.22);backdrop-filter:blur(26px) saturate(190%) brightness(1.06);-webkit-backdrop-filter:blur(26px) saturate(190%) brightness(1.06)}
+.modal,.guide-panel,.cart,.console{backdrop-filter:blur(44px) saturate(200%) brightness(1.08)!important;-webkit-backdrop-filter:blur(44px) saturate(200%) brightness(1.08)!important}
+.modal{box-shadow:0 30px 80px -20px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px var(--glass-stroke-soft)}
+.guide-panel{box-shadow:0 -18px 60px -18px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)}
+body[data-glass="soft"] .overlay{background:rgba(3,5,15,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+body[data-glass="soft"] .modal,body[data-glass="soft"] .guide-panel,body[data-glass="soft"] .cart,body[data-glass="soft"] .console{backdrop-filter:blur(18px) saturate(160%)!important;-webkit-backdrop-filter:blur(18px) saturate(160%)!important}
+body[data-lowperf] .overlay,body[data-lowperf] .modal,body[data-lowperf] .guide-panel,body[data-lowperf] .cart,body[data-lowperf] .console{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
