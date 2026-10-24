@@ -247,6 +247,13 @@
       <div class="field"><label>Corner style</label><div class="opt-grid" id="shapeOpts"></div></div>
       <div class="field"><label>Background style</label><div class="opt-grid" id="bgOpts"></div></div>
       <div class="field"><label>Intro transition style</label><div class="opt-grid" id="transitionOpts"></div></div>
+      <div class="field"><label>Price look</label><div class="opt-grid" id="priceStyleOpts"></div></div>
+      <div class="field"><label>Price shape</label><div class="opt-grid" id="priceShapeOpts"></div></div>
+      <div class="field"><label>Price colour</label><div class="opt-grid" id="priceColorOpts"></div></div>
+      <div class="field"><label>Currency code position</label><div class="opt-grid" id="priceCodeOpts"></div></div>
+      <div class="field"><label>Card borders</label><div class="opt-grid" id="borderOpts"></div></div>
+      <div class="field"><label>Card surface</label><div class="opt-grid" id="surfaceOpts"></div></div>
+      <div class="field"><label>Glass depth on windows</label><div class="opt-grid" id="glassOpts"></div></div>
       <div class="toggle-row"><div class="tlabel">Haptics<small>Vibration on taps (supported phones)</small></div><div class="switch on" id="sw_haptics" onclick="Edit.toggleHaptics()"></div></div>
     </div>
 
@@ -492,6 +499,8 @@
       <div class="field"><label>Price (KES)</label><input class="input" id="e_price" type="number" min="0" placeholder="3000"></div>
       <div class="field"><label>Genre</label><select class="select" id="e_cat"></select></div>
     </div>
+    <div class="field" id="e_saleWrap"><label><input type="checkbox" id="e_onsale" style="width:auto;margin-right:8px">On sale: show the old price crossed out</label>
+      <input class="input" id="e_compare" type="number" min="0" placeholder="Original price, e.g. 4500" style="margin-top:8px"></div>
     <div class="field" id="e_dimsWrap"><label>Dimensions</label><input class="input" id="e_dims" placeholder="120 × 80 cm"></div>
     <div id="e_imgBlock">
       <div class="field"><label>Photos</label>
