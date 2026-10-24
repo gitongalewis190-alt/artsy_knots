@@ -188,7 +188,7 @@ function linkOpen(url) {
 const DEFAULTS = {
   brand: { name: 'Artsy Knots', tag: 'handmade studio', logoUrl: '', logoLetter: 'A', footMark: 'Artsy Knots' },
   theme: { palette: 'obsidian', dark: true, accent: '#a855f7', accent2: '#6d28d9', bg1: '#0c0617', bg2: '#160a2b', bg3: '#07040f' },
-  layout: { fx: true, locOn: true, locLabel: 'Nairobi, Kenya', locUrl: '', guideOn: true, view: 'glass', density: 'standard', shape: 'default', haptics: true, bgMode: 'caustic', introTransition: 'fade' },
+  layout: { fx: true, locOn: true, locLabel: 'Nairobi, Kenya', locUrl: '', guideOn: true, view: 'glass', density: 'standard', shape: 'default', haptics: true, bgMode: 'caustic', introTransition: 'fade', priceStyle: 'plain', priceShape: 'pill', priceColor: 'accent', priceCode: 'before', border: 'soft', surface: 'glass', glass: 'deep' },
   copy: {
     heroEyebrow: 'Handmade in Nairobi · one of a kind',
     heroTitle: 'Texture you can *feel*, art you can hold.',
@@ -222,7 +222,18 @@ const PALETTES = {
   void: { accent: '#3b82f6', accent2: '#1e40af', bg1: '#050a1a', bg2: '#0a1430', bg3: '#03060f', label: 'Black/Blue', dark: true },
   nebula: { accent: '#8b5cf6', accent2: '#2563eb', bg1: '#0b0820', bg2: '#141038', bg3: '#070514', label: 'Nebula', dark: true },
   matrix: { accent: '#22e07a', accent2: '#0f9d52', bg1: '#04130c', bg2: '#082016', bg3: '#020a06', label: 'Black/Green', dark: true },
-  aurora: { accent: '#2dd4bf', accent2: '#3b82f6', bg1: '#06121a', bg2: '#0a1f2e', bg3: '#040b12', label: 'Aurora', dark: true }
+  aurora: { accent: '#2dd4bf', accent2: '#3b82f6', bg1: '#06121a', bg2: '#0a1f2e', bg3: '#040b12', label: 'Aurora', dark: true },
+  sunset: { accent: '#f97316', accent2: '#db2777', bg1: '#fff1e6', bg2: '#ffd9c2', bg3: '#fff8f3', label: 'Sunset gradient', dark: false },
+  rosegold: { accent: '#c98069', accent2: '#8f4a38', bg1: '#fbeae4', bg2: '#f3d2c6', bg3: '#fff7f3', label: 'Rose gold', dark: false },
+  forest: { accent: '#2f8f5b', accent2: '#14532d', bg1: '#e7f3ea', bg2: '#c9e5d2', bg3: '#f4faf6', label: 'Forest', dark: false },
+  candy: { accent: '#ec4899', accent2: '#8b5cf6', bg1: '#fdf2fb', bg2: '#f5d0fe', bg3: '#fff7fd', label: 'Candy gradient', dark: false },
+  lavender: { accent: '#a78bfa', accent2: '#7c3aed', bg1: '#f5f0ff', bg2: '#e9ddff', bg3: '#fcfaff', label: 'Lavender haze', dark: false },
+  sand: { accent: '#b08d57', accent2: '#6b4f22', bg1: '#f7f1e6', bg2: '#ece1c9', bg3: '#fdfaf3', label: 'Sand', dark: false },
+  ocean: { accent: '#0ea5e9', accent2: '#0c4a6e', bg1: '#e0f2fe', bg2: '#bae6fd', bg3: '#f0f9ff', label: 'Ocean gradient', dark: false },
+  cherry: { accent: '#e11d48', accent2: '#7f1d1d', bg1: '#fff1f2', bg2: '#fecdd3', bg3: '#fff8f8', label: 'Cherry', dark: false },
+  ember: { accent: '#f59e0b', accent2: '#b45309', bg1: '#1a0c04', bg2: '#2a1406', bg3: '#0b0502', label: 'Ember (dark)', dark: true },
+  midnight: { accent: '#38bdf8', accent2: '#1d4ed8', bg1: '#06101f', bg2: '#0b1d3a', bg3: '#030711', label: 'Midnight (dark)', dark: true },
+  neon: { accent: '#22d3ee', accent2: '#e879f9', bg1: '#0a0716', bg2: '#1a0f33', bg3: '#05030b', label: 'Neon gradient (dark)', dark: true }
 };
 
 /* ── TOASTS: one at a time, each readable for its full time ── */
@@ -283,14 +294,14 @@ function fromRow(r, comments) {
     id: r.id, type: r.type, title: r.title, desc: r.description || '', price: Number(r.price) || 0,
     category: r.category || 'matwork', dims: r.dims || '', images: r.images || [],
     video: r.video_url || '', duration: r.duration || '', vdate: r.video_date || '', vthumb: r.video_thumb || '',
-    likes: r.likes || 0, views: r.views || 0, createdAt: Date.parse(r.created_at) || 0, tag: r.tag || '', tagText: r.tag_text || '', comments: comments || []
+    likes: r.likes || 0, views: r.views || 0, createdAt: Date.parse(r.created_at) || 0, tag: r.tag || '', tagText: r.tag_text || '', onSale: !!r.on_sale, comparePrice: Number(r.compare_price) || 0, comments: comments || []
   };
 }
 function toRow(p) {
   return {
     type: p.type, title: p.title, description: p.desc || '', price: p.type === 'video' ? 0 : (Number(p.price) || 0),
     category: p.category || 'matwork', dims: p.dims || '', images: p.images || [],
-    video_url: p.video || '', duration: p.duration || '', video_date: p.vdate || null, video_thumb: p.vthumb || '', tag: p.tag || null, tag_text: p.tagText || ''
+    video_url: p.video || '', duration: p.duration || '', video_date: p.vdate || null, video_thumb: p.vthumb || '', tag: p.tag || null, tag_text: p.tagText || '', on_sale: !!p.onSale, compare_price: p.onSale ? (Number(p.comparePrice) || null) : null
   };
 }
 
@@ -498,9 +509,23 @@ const Auth = {
 };
 
 /* ── RENDER ── */
+const PRICE_COLOURS = { accent: 'var(--accent)', ink: 'var(--ink)', gold: '#b7791f', rose: '#e11d74', mint: '#0f9d74', sky: '#0284c7', violet: '#7c3aed', coral: '#f0644d', teal: '#0d9488', amber: '#d97706', black: '#111111' };
 const Render = {
   cur() { return Store.state.contact.currency || 'KES'; },
   money(n) { return Number(n).toLocaleString() + ' ' + this.cur(); },
+  priceHtml(p) {
+    const l = Store.state.layout, code = this.cur();
+    const num = Number(p.price).toLocaleString();
+    const txt = l.priceCode === 'after' ? num + ' ' + code : code + ' ' + num;
+    const col = PRICE_COLOURS[l.priceColor] || PRICE_COLOURS.accent;
+    let h = '<span class="pz" data-ps="' + esc(l.priceStyle || 'plain') + '" data-sh="' + esc(l.priceShape || 'pill') + '" style="--pc:' + col + '">' + esc(txt) + '</span>';
+    if (p.onSale && p.comparePrice > p.price && p.price > 0) {
+      const off = Math.round((1 - p.price / p.comparePrice) * 100);
+      const was = code + ' ' + Number(p.comparePrice).toLocaleString();
+      h = '<span class="pz-was">' + esc(was) + '</span>' + h + '<span class="pz-off">−' + off + '%</span>';
+    }
+    return h;
+  },
   label(slug) { const c = Store.categories.find(function (x) { return x.slug === slug; }); return c ? c.label : slug; },
   glyph(cat) {
     const map = { matwork: 'layers', canvas: 'image', resin: 'gem', commission: 'sparkles', video: 'play' };
@@ -513,6 +538,7 @@ const Render = {
     r.setProperty('--bg-1', t.bg1); r.setProperty('--bg-2', t.bg2); r.setProperty('--bg-3', t.bg3);
     document.body.dataset.theme = t.dark ? 'dark' : 'light';
     document.body.dataset.density = l.density; document.body.dataset.shape = l.shape;
+    document.body.dataset.border = l.border || 'soft'; document.body.dataset.surface = l.surface || 'glass'; document.body.dataset.glass = l.glass || 'deep';
     document.body.dataset.view = l.view; document.body.dataset.bg = l.bgMode || 'caustic';
     $('themeColor').setAttribute('content', t.bg3);
     Views.syncFab();
@@ -644,7 +670,7 @@ const Gallery = {
       const made = p.createdAt ? '<div class="made">' + ic('clock', 12) + ' Added ' + esc(new Date(p.createdAt).toLocaleString([], { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</div>' : '';
       const body = isVid
         ? '<div class="body"><div class="vid-meta-row"><span class="vid-provider">' + esc(Media.providerLabel(p.video)) + '</span>' + (p.vdate ? '<span class="vid-date">' + new Date(p.vdate).toLocaleDateString() + '</span>' : '') + '</div><h3 class="vid-title">' + esc(p.title) + '</h3><p class="vid-desc">' + esc(p.desc) + '</p><div class="vid-stats"><span>' + ic('heart', 13) + ' ' + p.likes + '</span><span>' + ic('eye', 13) + ' ' + p.views + '</span>' + (p.duration ? '<span>' + ic('clock', 13) + ' ' + esc(p.duration) + '</span>' : '') + '</div>' + made + '</div>'
-        : '<div class="body"><h3>' + esc(p.title) + '</h3><p class="desc">' + esc(p.desc) + '</p>' + (p.dims ? '<div class="dims">' + esc(p.dims) + '</div>' : '') + made + '<div class="meta"><span class="price">' + Render.money(p.price) + '</span><span class="tag">' + esc(Render.label(p.category)) + '</span></div></div>';
+        : '<div class="body"><h3>' + esc(p.title) + '</h3><p class="desc">' + esc(p.desc) + '</p>' + (p.dims ? '<div class="dims">' + esc(p.dims) + '</div>' : '') + made + '<div class="meta"><span class="price">' + Render.priceHtml(p) + '</span><span class="tag">' + esc(Render.label(p.category)) + '</span></div></div>';
       const actions = '<div class="actions" style="padding:0 22px 18px">'
         + '<button class="act act-like act-mini' + (isLiked ? ' liked' : '') + '" id="lb-' + p.id + '" onclick="event.stopPropagation();Gallery.like(\'' + p.id + '\')" aria-label="Like">' + ic('heart', 16, isLiked) + '</button>'
         + Gallery.cmtBtn(p)
@@ -757,11 +783,11 @@ const Detail = {
     else dm.innerHTML = '<div style="padding:40px;opacity:.5">' + Render.glyph(isVid ? 'video' : p.category) + '</div>';
     $('dTitle').textContent = p.title;
     const meta = [];
-    if (!isVid) { meta.push(Render.money(p.price)); if (p.dims) meta.push(p.dims); }
+    if (!isVid) { meta.push({ raw: Render.priceHtml(p) }); if (p.dims) meta.push(p.dims); }
     meta.push(Render.label(p.category));
     if (isVid && p.duration) meta.push('⏱ ' + p.duration);
     if (isVid && p.vdate) meta.push(new Date(p.vdate).toLocaleDateString());
-    $('dMeta').innerHTML = meta.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('');
+    $('dMeta').innerHTML = meta.map(function (m) { return typeof m === 'string' ? '<span>' + esc(m) + '</span>' : '<span class="dprice">' + m.raw + '</span>'; }).join('');
     $('dDesc').textContent = p.desc;
     $('dCart').style.display = isVid ? 'none' : '';
     let note = $('vidCartNote');
@@ -1254,7 +1280,8 @@ const Editor = {
     this.eid = null; this.kind = kind; this.imgs = []; this.tag = ''; $('e_tagText').value = ''; this.paintTag();
     $('editorTitle').textContent = kind === 'video' ? 'Add a video' : 'Add an artwork';
     $('editorSub').textContent = kind === 'video' ? 'Paste a YouTube, TikTok or Vimeo link.' : 'Photos sell the piece. Bright, clear images work best.';
-    ['e_title', 'e_desc', 'e_price', 'e_dims', 'e_image', 'e_video', 'e_duration', 'e_vdate', 'e_vthumb'].forEach(function (id) { $(id).value = ''; });
+    ['e_title', 'e_desc', 'e_price', 'e_dims', 'e_image', 'e_video', 'e_duration', 'e_vdate', 'e_vthumb', 'e_compare'].forEach(function (id) { $(id).value = ''; });
+    $('e_onsale').checked = false;
     this.fillCats(Store.categories.length ? Store.categories[0].slug : 'matwork');
     $('editorErr').style.display = 'none';
     this._fields(); this.imgMode('upload'); this.renderPrev();
@@ -1269,6 +1296,7 @@ const Editor = {
     $('e_title').value = p.title; $('e_desc').value = p.desc; $('e_price').value = p.price || '';
     $('e_dims').value = p.dims; $('e_video').value = p.video; $('e_duration').value = p.duration;
     $('e_vdate').value = p.vdate; $('e_vthumb').value = p.vthumb;
+    $('e_onsale').checked = !!p.onSale; $('e_compare').value = p.onSale ? (p.comparePrice || '') : '';
     this.fillCats(p.category);
     $('editorErr').style.display = 'none';
     this._fields(); this.imgMode('upload'); this.renderPrev();
@@ -1284,6 +1312,7 @@ const Editor = {
     $('e_vidBlock').style.display = vid ? 'block' : 'none';
     $('e_imgBlock').style.display = vid ? 'none' : 'block';
     $('e_dimsWrap').style.display = vid ? 'none' : 'block';
+    $('e_saleWrap').style.display = vid ? 'none' : 'block';
   },
   imgMode(m) {
     const up = (m === 'upload');
@@ -1321,7 +1350,9 @@ const Editor = {
       Object.assign(base, { type: 'video', video: video, duration: val('e_duration').trim(), vdate: val('e_vdate'), vthumb: val('e_vthumb').trim(), price: 0, images: [], dims: '' });
     } else {
       const price = Number(val('e_price')); if (!price || price < 0) { fail('Set a price.'); return; }
-      Object.assign(base, { type: 'artwork', price: price, dims: val('e_dims').trim() });
+      const onSale = $('e_onsale').checked, compare = Number(val('e_compare'));
+      if (onSale && (!compare || compare <= price)) { fail('The original price must be higher than the sale price.'); return; }
+      Object.assign(base, { type: 'artwork', price: price, dims: val('e_dims').trim(), onSale: onSale, comparePrice: onSale ? compare : 0 });
     }
     base.tag = this.tag || ''; base.tagText = val('e_tagText').trim().slice(0, 24);
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -1498,6 +1529,14 @@ const Console = {
     $('bgOpts').innerHTML = bgs.map(function (v) { return '<div class="opt' + (d.bgMode === v[0] ? ' sel' : '') + '" onclick="Edit.layout(\'bgMode\',\'' + v[0] + '\')"><div class="lname">' + esc(v[1]) + '</div><div class="ldesc">' + esc(v[2]) + '</div></div>'; }).join('');
     const trans = [['fade', 'Fade', 'clean dissolve'], ['slideUp', 'Slide Up', 'sweeps upward'], ['zoomOut', 'Zoom Out', 'pulls back'], ['blurDissolve', 'Blur', 'melts away'], ['splitH', 'Split', 'tears open']];
     $('transitionOpts').innerHTML = trans.map(function (v) { return '<div class="opt' + (d.introTransition === v[0] ? ' sel' : '') + '" onclick="Edit.layout(\'introTransition\',\'' + v[0] + '\')"><div class="lname">' + esc(v[1]) + '</div><div class="ldesc">' + esc(v[2]) + '</div></div>'; }).join('');
+    const grid = function (kind, opts, cur) { return opts.map(function (v) { return '<div class="opt' + (cur === v[0] ? ' sel' : '') + '" onclick="Edit.layout(\'' + kind + '\',\'' + v[0] + '\')"><div class="lname">' + esc(v[1]) + '</div><div class="ldesc">' + esc(v[2]) + '</div></div>'; }).join(''); };
+    $('priceStyleOpts').innerHTML = grid('priceStyle', [['plain', 'Classic', 'bold serif'], ['chip', 'Chip', 'filled label'], ['outline', 'Outline', 'hollow frame'], ['gradient', 'Gradient', 'colour fade'], ['mono', 'Mono', 'clean numerals'], ['italic', 'Italic', 'soft script'], ['glow', 'Glow', 'lit from within']], d.priceStyle || 'plain');
+    $('priceShapeOpts').innerHTML = grid('priceShape', [['pill', 'Pill', 'fully rounded'], ['rounded', 'Rounded', 'soft corners'], ['square', 'Square', 'sharp edges'], ['tag', 'Tag', 'shop-label point']], d.priceShape || 'pill');
+    $('priceColorOpts').innerHTML = grid('priceColor', [['accent', 'Brand', 'your palette'], ['ink', 'Ink', 'text colour'], ['gold', 'Gold', 'warm metal'], ['rose', 'Rose', 'bright pink'], ['mint', 'Mint', 'fresh green'], ['sky', 'Sky', 'clear blue'], ['violet', 'Violet', 'deep purple'], ['coral', 'Coral', 'warm orange'], ['teal', 'Teal', 'cool green-blue'], ['amber', 'Amber', 'golden yellow'], ['black', 'Black', 'high contrast']], d.priceColor || 'accent');
+    $('priceCodeOpts').innerHTML = grid('priceCode', [['before', 'KES 3,000', 'code first'], ['after', '3,000 KES', 'code last']], d.priceCode || 'before');
+    $('borderOpts').innerHTML = grid('border', [['soft', 'Soft glass', 'default edge'], ['hairline', 'Hairline', 'thin ink line'], ['none', 'None', 'borderless'], ['glow', 'Glow', 'accent halo'], ['ring', 'Ring', 'solid accent ring'], ['dashed', 'Dashed', 'stitched edge'], ['double', 'Double', 'layered frame'], ['gradient', 'Gradient', 'colour-fade edge']], d.border || 'soft');
+    $('surfaceOpts').innerHTML = grid('surface', [['glass', 'Glass', 'frosted'], ['solid', 'Solid', 'opaque card'], ['tint', 'Tint', 'brand-coloured'], ['gradient', 'Gradient', 'colour fade']], d.surface || 'glass');
+    $('glassOpts').innerHTML = grid('glass', [['deep', 'Deep frost', 'see-through, strong blur'], ['soft', 'Light frost', 'subtle blur']], d.glass || 'deep');
   },
   renderProducts() {
     const wrap = $('adminProducts'), p = Store.products;
